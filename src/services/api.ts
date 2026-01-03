@@ -16,7 +16,8 @@ import { ExpenditureReqDTO } from '../types/expenditure';
 import { ManualReconciliationPayload } from '../types/reconciliation';
 import { TripType, TripTypeSummary } from '../types/trip-type';
 import { Client } from '../types/client';
-import { OnboardEmployeeRequest } from '../types/employee';
+import { Employee, EmployeeFormDto, EmployeeSearchParams, OnboardEmployeeRequest } from '../types/employee';
+import { JobReference } from '../types/job-reference';
 
 export interface PaginationParams {
   page?: number;
@@ -1521,18 +1522,6 @@ export const getTripTypeSummaries = async (
   }
 };
 
-export interface Employee {
-  id: string;
-  employeeNumber: string;
-  fullName: string;
-  email: string;
-  phoneNumber?: string;
-  identityNumber?: string;
-  currentClient?: string;
-  jobTitle?: string;
-  status: 'BENCH' | 'DEPLOYED' | 'INTERNAL' | 'INACTIVE';
-}
-
 // Struktur JSON standar dari Spring Data "Page"
 export interface PageResponse<T> {
   content: T[];
@@ -1546,6 +1535,7 @@ export interface PageResponse<T> {
 }
 
 export const employeeService = {
+
   getEmployees: async (status: string) => {
     const response = await api.get(`/employees/list?status=${status}`);
     return response.data;
@@ -1559,6 +1549,43 @@ export const employeeService = {
   },
   onboardEmployee: async (data: OnboardEmployeeRequest) => {
     return await api.post('/employees/onboard', data);
+  },
+  create(payload: EmployeeFormDto): Promise<string> {
+    const { id, ...request } = payload;
+
+    return api
+      .post<string>('/employees', request)
+      .then(res => res.data);
+  },
+
+  update(id: string, payload: EmployeeFormDto): Promise<void> {
+    return api
+      .put<void>(`/employees/${id}`, payload)
+      .then(res => res.data);
+  },
+
+  search(params: EmployeeSearchParams) {
+    return api
+      .get<PageResponse<Employee>>('/employees/search', { params })
+      .then(res => res.data);
+  },
+
+  getById(id: string) {
+    return api
+      .get<Employee>(`/employees/${id}`)
+      .then(res => res.data);
+  },
+
+  delete(id: string) {
+    return api.delete(`/api/employees/${id}`);
+  }
+};
+
+export const jobReferenceService = {
+  getAll(): Promise<JobReference[]> {
+    return api
+      .get<JobReference[]>('/job-references')
+      .then(res => res.data);
   },
 };
 

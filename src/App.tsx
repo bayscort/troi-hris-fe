@@ -31,6 +31,7 @@ import ClientsPage from './pages/ClientsPage';
 import ActiveEmployeesPage from './pages/ActiveEmployeesPage';
 import TalentPoolEmployeesPage from './pages/TalentPoolEmployeePage';
 import OnboardEmployeePage from './pages/OnboardEmployeePage';
+import CombineEmployee from './pages/CombineEmployee';
 
 export function App() {
   useEffect(() => {
@@ -60,7 +61,7 @@ export function App() {
                       <Route path="/home" element={<HomePage />} />
                       <Route path="/combine-dashboard" element={<CombineDashboard />} />
                       <Route path="/client-directory" element={<ClientsPage />} />
-                      <Route path="/active-employees" element={<ActiveEmployeesPage />} />
+                      <Route path="/employees" element={<CombineEmployee />} />
                       <Route path="/talent-pool" element={<TalentPoolEmployeesPage />} />
                       <Route path="/onboarding" element={<OnboardEmployeePage />} />
                       <Route path="/trip" element={<TripsPage />} />

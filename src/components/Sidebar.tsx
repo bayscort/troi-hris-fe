@@ -82,7 +82,7 @@ const Sidebar = () => {
     { name: 'Dashboard', path: '/combine-dashboard', icon: <LayoutDashboard size={20} className="mr-3" />, apiName: 'dashboard' },
     { name: 'Client Directory', path: '/client-directory', icon: <Coins size={20} className="mr-3" />, apiName: 'client-directory' },
     { name: 'Client Site', path: '/client-site', icon: <Coins size={20} className="mr-3" />, apiName: 'client-site' },
-    { name: 'Active Employees', path: '/active-employees', icon: <Coins size={20} className="mr-3" />, apiName: 'active-employees' },
+    { name: 'Employees', path: '/employees', icon: <Coins size={20} className="mr-3" />, apiName: 'employees' },
     { name: 'Talent Pool', path: '/talent-pool', icon: <Coins size={20} className="mr-3" />, apiName: 'talent-pool' },
     { name: 'Onboarding', path: '/onboarding', icon: <Coins size={20} className="mr-3" />, apiName: 'onboarding' },
     { name: 'Offboarding', path: '/offboarding', icon: <Coins size={20} className="mr-3" />, apiName: 'offboarding' },
@@ -136,7 +136,7 @@ const Sidebar = () => {
               className="h-8 w-8 rounded-xl border border-gray-200 shadow-sm"
             />
             <h2 className="text-xl font-semibold text-gray-800 tracking-tight">
-              Trust Offshore International
+              TROI HRIS
             </h2>
           </div>
         )}
@@ -224,7 +224,7 @@ const Sidebar = () => {
           {!isCollapsed.employeeManagement && !isSidebarCollapsed && (
             <ul className="space-y-1 mt-2">
               {filteredMenuItems
-                .filter((item) => ['Active Employees', 'Talent Pool', 'Onboarding', 'Offboarding', 'Document Center'].includes(item.name))
+                .filter((item) => ['Employees'].includes(item.name))
                 .map((item) => (
                   <li
                     key={item.name}
