@@ -37,6 +37,7 @@ type SectionKey =
   | 'employeeManagement'
   | 'workforceManagement'
   | 'timeAndAttendance'
+  | 'shiftManagement'
   | 'payrollAndBilling'
   | 'finance'
   | 'userManagement'
@@ -58,6 +59,7 @@ const Sidebar = () => {
     employeeManagement: true,
     workforceManagement: true,
     timeAndAttendance: true,
+    shiftManagement: true,
     payrollAndBilling: true,
     finance: true,
     userManagement: true,
@@ -91,6 +93,7 @@ const Sidebar = () => {
     { name: 'Deploy Employee', path: '/deploy-employee', icon: <Coins size={20} className="mr-3" />, apiName: 'deploy-employee' },
     { name: 'Expiring Contract', path: '/expiring-contract', icon: <Coins size={20} className="mr-3" />, apiName: 'expiring-contract' },
     { name: 'Attendance Logs', path: '/attendance-log', icon: <BarChart2 size={20} className="mr-3" />, apiName: 'attendance-log' },
+    { name: 'Shift Master', path: '/shift-master', icon: <BarChart2 size={20} className="mr-3" />, apiName: 'shift-master' },
     { name: 'Finance Report', path: '/combine-finance-report', icon: <Coins size={20} className="mr-3" />, apiName: 'combine-finance-report' },
     { name: 'Trip', path: '/trip', icon: <Route size={20} className="mr-3" />, apiName: 'trip' },
     { name: 'Fund Request', path: '/fund-request', icon: <FilePlus2 size={20} className="mr-3" />, apiName: 'fund-request' },
@@ -297,6 +300,42 @@ const Sidebar = () => {
             <ul className="space-y-1 mt-2">
               {filteredMenuItems
                 .filter((item) => ['Attendance Logs'].includes(item.name))
+                .map((item) => (
+                  <li
+                    key={item.name}
+                    className="flex items-center px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-md cursor-pointer text-sm transition-colors duration-200"
+                    onClick={() => navigate(item.path)}
+                  >
+                    {item.icon}
+                    <span>{item.name}</span>
+                  </li>
+                ))}
+            </ul>
+          )}
+        </div>
+
+        <div className="mb-4">
+          <div
+            className="flex items-center justify-between px-3 py-2 text-gray-500 cursor-pointer hover:bg-gray-100 rounded-md transition-colors duration-200"
+            onClick={() => toggleSection('shiftManagement')}
+            title={isSidebarCollapsed ? 'Shift Management' : ''}
+          >
+            {!isSidebarCollapsed && (
+              <p className="text-xs font-semibold tracking-wide">SHIFT MANAGEMENT</p>
+            )}
+            {!isSidebarCollapsed && (
+              <ChevronDown
+                size={16}
+                className={`text-gray-500 transform transition-transform duration-200 ${isCollapsed.shiftManagement ? 'rotate-0' : 'rotate-180'
+                  }`}
+              />
+            )}
+            {isSidebarCollapsed && <UserCheck size={20} />}
+          </div>
+          {!isCollapsed.shiftManagement && !isSidebarCollapsed && (
+            <ul className="space-y-1 mt-2">
+              {filteredMenuItems
+                .filter((item) => ['Shift Master'].includes(item.name))
                 .map((item) => (
                   <li
                     key={item.name}

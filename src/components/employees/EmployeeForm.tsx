@@ -97,7 +97,6 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
       if (employee?.id) {
         await employeeService.update(employee.id, formData);
       } else {
-        // Hapus ID jika create new (untuk menghindari error payload)
         const { id, ...payload } = formData;
         await employeeService.create(payload);
       }
@@ -110,7 +109,6 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
     }
   };
 
-  // Steps Configuration
   const steps = [
     { number: 1, title: 'Personal Info', icon: <User size={18} /> },
     { number: 2, title: 'Job References', icon: <Briefcase size={18} /> },

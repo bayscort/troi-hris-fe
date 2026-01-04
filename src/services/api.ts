@@ -18,6 +18,7 @@ import { TripType, TripTypeSummary } from '../types/trip-type';
 import { Client } from '../types/client';
 import { Employee, EmployeeFormDto, EmployeeSearchParams, OnboardEmployeeRequest } from '../types/employee';
 import { JobReference } from '../types/job-reference';
+import { CreateShiftMasterRequest, ShiftMasterDTO } from '../types/shift-master';
 
 export interface PaginationParams {
   page?: number;
@@ -255,7 +256,7 @@ export const clientService = {
     }
   },
 
-  getClientById: async (id: number): Promise<Client> => {
+  getClientById: async (id: string): Promise<Client> => {
     try {
       const response = await api.get(`/clients/${id}`);
       return response.data;
@@ -275,7 +276,7 @@ export const clientService = {
     }
   },
 
-  updateClient: async (id: number, client: Client): Promise<Client> => {
+  updateClient: async (id: string, client: Client): Promise<Client> => {
     try {
       const response = await api.put(`/clients/${id}`, client);
       return response.data;
@@ -285,11 +286,62 @@ export const clientService = {
     }
   },
 
-  deleteClient: async (id: number): Promise<void> => {
+  deleteClient: async (id: string): Promise<void> => {
     try {
       await api.delete(`/clients/${id}`);
     } catch (error) {
       console.error(`Error deleting clients with id ${id}:`, error);
+      throw error;
+    }
+  }
+};
+
+export const shiftMasterService = {
+  getAllShiftMasters: async (): Promise<ShiftMasterDTO[]> => {
+    try {
+      const response = await api.get('/shift-masters');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching shift masters:', error);
+      throw error;
+    }
+  },
+
+  getShiftMasterById: async (id: number): Promise<ShiftMasterDTO> => {
+    try {
+      const response = await api.get(`/shift-masters/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching shift masters with id ${id}:`, error);
+      throw error;
+    }
+  },
+
+  createShiftMaster: async (shiftMaster: Omit<CreateShiftMasterRequest, 'id'>): Promise<string> => {
+    try {
+      const response = await api.post('/shift-masters', shiftMaster);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating shift masters:', error);
+      throw error;
+    }
+  },
+
+  updateShiftMaster: async (id: string, shiftMaster: CreateShiftMasterRequest): Promise<string> => {
+    try {
+      const response = await api.put(`/shift-masters/${id}`, shiftMaster);
+      return response.data;
+    } catch (error) {
+      console.error(`Error updating shift master with id ${id}:`, error);
+      throw error;
+    }
+  },
+
+  deleteShiftMaster: async (id: string): Promise<void> => {
+    try {
+      await api.delete(`/shift-masters/${id}`);
+    } catch (error) {
+      console.error(`Error deleting shift masters with id ${id}:`, error);
       throw error;
     }
   }
