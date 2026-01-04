@@ -93,6 +93,8 @@ const Sidebar = () => {
     { name: 'Deploy Employee', path: '/deploy-employee', icon: <Coins size={20} className="mr-3" />, apiName: 'deploy-employee' },
     { name: 'Expiring Contract', path: '/expiring-contract', icon: <Coins size={20} className="mr-3" />, apiName: 'expiring-contract' },
     { name: 'Attendance Logs', path: '/attendance-log', icon: <BarChart2 size={20} className="mr-3" />, apiName: 'attendance-log' },
+    { name: 'Shift Roster', path: '/shift-roster', icon: <BarChart2 size={20} className="mr-3" />, apiName: 'shift-roster' },
+    { name: 'Shift Assignment', path: '/shift-assignment', icon: <BarChart2 size={20} className="mr-3" />, apiName: 'shift-assignment' },
     { name: 'Shift Master', path: '/shift-master', icon: <BarChart2 size={20} className="mr-3" />, apiName: 'shift-master' },
     { name: 'Shift Pattern', path: '/shift-pattern', icon: <BarChart2 size={20} className="mr-3" />, apiName: 'shift-pattern' },
     { name: 'Finance Report', path: '/combine-finance-report', icon: <Coins size={20} className="mr-3" />, apiName: 'combine-finance-report' },
@@ -336,7 +338,7 @@ const Sidebar = () => {
           {!isCollapsed.shiftManagement && !isSidebarCollapsed && (
             <ul className="space-y-1 mt-2">
               {filteredMenuItems
-                .filter((item) => ['Shift Master', 'Shift Pattern'].includes(item.name))
+                .filter((item) => ['Shift Roster', 'Shift Assignment', 'Shift Master', 'Shift Pattern'].includes(item.name))
                 .map((item) => (
                   <li
                     key={item.name}

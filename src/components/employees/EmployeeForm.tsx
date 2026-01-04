@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { X, ArrowLeft, ArrowRight, Save, Loader, Plus, Trash, User, Briefcase, GraduationCap, FileCheck } from 'lucide-react';
-import { employeeService, jobReferenceService } from '../../services/api'; // Sesuaikan path import
-import { EmployeeFormDto, JobReferenceForm, EducationForm } from '../../types/employee'; // Sesuaikan path import
+import { employeeService, jobReferenceService } from '../../services/api';
+import { EmployeeFormDto, JobReferenceForm, EducationForm } from '../../types/employee';
 
 interface EmployeeFormProps {
   isOpen: boolean;
@@ -10,7 +10,6 @@ interface EmployeeFormProps {
   employee?: EmployeeFormDto;
 }
 
-// Helper untuk object kosong
 const emptyJobReference = (): JobReferenceForm => ({
   jobReferenceId: '',
   skillLevel: 'BEGINNER',
@@ -35,19 +34,17 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
   const [saving, setSaving] = useState(false);
   const [loadingRefs, setLoadingRefs] = useState(false);
   
-  // State untuk Data Referensi (Dropdown)
   const [jobReferenceOptions, setJobReferenceOptions] = useState<any[]>([]);
 
   const [formData, setFormData] = useState<EmployeeFormDto>({
     fullName: '',
     employeeNumber: '',
-    gender: 'MALE', // Default value
+    gender: 'MALE',
     active: true,
     jobReferences: [],
     educations: [],
   });
 
-  // Load Data awal
   useEffect(() => {
     const init = async () => {
       setLoadingRefs(true);
@@ -67,13 +64,11 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
     }
   }, [employee]);
 
-  // Handler Umum
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // Handler Job References
   const addJobReference = () => setFormData(prev => ({ ...prev, jobReferences: [...prev.jobReferences, emptyJobReference()] }));
   const removeJobReference = (index: number) => setFormData(prev => ({ ...prev, jobReferences: prev.jobReferences.filter((_, i) => i !== index) }));
   const updateJobReference = (index: number, field: keyof JobReferenceForm, value: any) => {
@@ -82,7 +77,6 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
     setFormData(prev => ({ ...prev, jobReferences: updated }));
   };
 
-  // Handler Education
   const addEducation = () => setFormData(prev => ({ ...prev, educations: [...prev.educations, emptyEducation()] }));
   const removeEducation = (index: number) => setFormData(prev => ({ ...prev, educations: prev.educations.filter((_, i) => i !== index) }));
   const updateEducation = (index: number, field: keyof EducationForm, value: any) => {

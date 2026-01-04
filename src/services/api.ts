@@ -20,6 +20,10 @@ import { Employee, EmployeeFormDto, EmployeeSearchParams, OnboardEmployeeRequest
 import { JobReference } from '../types/job-reference';
 import { CreateShiftMasterRequest, ShiftMasterDTO } from '../types/shift-master';
 import { BulkPatternItemsRequest, CreatePatternRequest, ShiftPattern } from '../types/shift-pattern';
+import { ClientSite } from '../types/client-site';
+import { JobPosition } from '../types/job-position';
+import { BulkAssignRequest } from '../types/assigment-shift';
+import { RosterResponse } from '../types/roster';
 
 export interface PaginationParams {
   page?: number;
@@ -295,6 +299,42 @@ export const clientService = {
       throw error;
     }
   }
+};
+
+export const clientSiteService = {
+  getClientSiteByClientId: async (clientId: string): Promise<ClientSite[]> => {
+    try {
+      const response = await api.get(`/client-sites/client/${clientId}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching client sites with clientId ${clientId}:`, error);
+      throw error;
+    }
+  },
+};
+
+export const jobPositionService = {
+  getJobPositionByClientId: async (clientId: string): Promise<JobPosition[]> => {
+    try {
+      const response = await api.get(`/job-positions/client/${clientId}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching job positions with clientId ${clientId}:`, error);
+      throw error;
+    }
+  },
+};
+
+export const assignmentShiftService = {
+  bulkAssign: async (req: Omit<BulkAssignRequest, 'id'>): Promise<string> => {
+    try {
+      const response = await api.post('/shifts/bulk-assign-pattern', req);
+      return response.data;
+    } catch (error) {
+      console.error('Error assigning shift pattern:', error);
+      throw error;
+    }
+  },
 };
 
 export const shiftMasterService = {
@@ -1638,7 +1678,13 @@ export const employeeService = {
 
   delete(id: string) {
     return api.delete(`/api/employees/${id}`);
-  }
+  },
+
+  getActiveBySite: async (siteId: string, jobPositionId?: string) => {
+        const params = { siteId, jobPositionId };
+        const response = await api.get('/placements/active-employees', { params });
+        return response.data;
+    }
 };
 
 export const jobReferenceService = {
@@ -1665,6 +1711,19 @@ export const shiftPatternService = {
   addItems: async (req: BulkPatternItemsRequest): Promise<void> => {
     await api.post('/shift-pattern/items', req);
   },
+};
+
+export const rosterService = {
+  getMatrix: async (
+    siteId: string, 
+    startDate: string, 
+    endDate: string,
+    jobPositionId?: string
+  ): Promise<RosterResponse> => {
+    const params = { siteId, startDate, endDate, jobPositionId };
+    const response = await api.get<RosterResponse>('/roster/matrix', { params });
+    return response.data;
+  }
 };
 
 

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, Clock, AlertCircle } from 'lucide-react';
 import { ShiftMasterDTO, CreateShiftMasterRequest } from '../../types/shift-master';
-// Pastikan ClientDTO diimport atau didefinisikan jika ada type khususnya
 import { shiftMasterService, clientService } from '../../services/api'; 
 
 interface ShiftMasterFormProps {
@@ -9,7 +8,6 @@ interface ShiftMasterFormProps {
   onClose: () => void;
   onSuccess: () => void; 
   initialData?: ShiftMasterDTO | null;
-  // clientId prop mungkin masih berguna sebagai default, tapi sekarang bisa dipilih via dropdown
   defaultClientId?: string; 
 }
 
@@ -20,7 +18,7 @@ const ShiftMasterForm: React.FC<ShiftMasterFormProps> = ({
   initialData,
   defaultClientId,
 }) => {
-  // --- STATE ---
+
   const [formData, setFormData] = useState<CreateShiftMasterRequest>({
     clientId: defaultClientId || '',
     code: '',
@@ -40,7 +38,6 @@ const ShiftMasterForm: React.FC<ShiftMasterFormProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
 
-  // --- EFFECT: Load Clients ---
   useEffect(() => {
     if (isOpen) {
       fetchClients();
@@ -50,9 +47,6 @@ const ShiftMasterForm: React.FC<ShiftMasterFormProps> = ({
   const fetchClients = async () => {
     setIsLoadingClients(true);
     try {
-      // Sesuaikan nama method dengan yang ada di api.ts Anda
-      // Contoh: const response = await clientService.getAll();
-      // Asumsi response.data adalah array client
       const response = await clientService.getAllClients(); 
       setClients(response); 
     } catch (error) {
@@ -63,15 +57,13 @@ const ShiftMasterForm: React.FC<ShiftMasterFormProps> = ({
     }
   };
 
-  // --- EFFECT: Set Form Data on Edit/Create ---
   useEffect(() => {
     setApiError(null); 
     setErrors({});
 
     if (initialData) {
-      // EDIT MODE
       setFormData({
-        clientId: initialData.client.id, // Ambil ID dari object client di initialData
+        clientId: initialData.client.id,
         code: initialData.code,
         name: initialData.name,
         startTime: initialData.startTime ? initialData.startTime.substring(0, 5) : '',
@@ -83,7 +75,6 @@ const ShiftMasterForm: React.FC<ShiftMasterFormProps> = ({
         color: initialData.color || '#4CAF50',
       });
     } else {
-      // CREATE MODE
       setFormData({
         clientId: defaultClientId || '',
         code: '',
@@ -99,7 +90,6 @@ const ShiftMasterForm: React.FC<ShiftMasterFormProps> = ({
     }
   }, [initialData, defaultClientId, isOpen]);
 
-  // --- HANDLERS ---
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     let newValue: any = value;
