@@ -94,6 +94,7 @@ const Sidebar = () => {
     { name: 'Expiring Contract', path: '/expiring-contract', icon: <Coins size={20} className="mr-3" />, apiName: 'expiring-contract' },
     { name: 'Attendance Logs', path: '/attendance-log', icon: <BarChart2 size={20} className="mr-3" />, apiName: 'attendance-log' },
     { name: 'Shift Master', path: '/shift-master', icon: <BarChart2 size={20} className="mr-3" />, apiName: 'shift-master' },
+    { name: 'Shift Pattern', path: '/shift-pattern', icon: <BarChart2 size={20} className="mr-3" />, apiName: 'shift-pattern' },
     { name: 'Finance Report', path: '/combine-finance-report', icon: <Coins size={20} className="mr-3" />, apiName: 'combine-finance-report' },
     { name: 'Trip', path: '/trip', icon: <Route size={20} className="mr-3" />, apiName: 'trip' },
     { name: 'Fund Request', path: '/fund-request', icon: <FilePlus2 size={20} className="mr-3" />, apiName: 'fund-request' },
@@ -335,7 +336,7 @@ const Sidebar = () => {
           {!isCollapsed.shiftManagement && !isSidebarCollapsed && (
             <ul className="space-y-1 mt-2">
               {filteredMenuItems
-                .filter((item) => ['Shift Master'].includes(item.name))
+                .filter((item) => ['Shift Master', 'Shift Pattern'].includes(item.name))
                 .map((item) => (
                   <li
                     key={item.name}

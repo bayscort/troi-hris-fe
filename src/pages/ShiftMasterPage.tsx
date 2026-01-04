@@ -341,7 +341,6 @@ const ShiftMasterPage: React.FC = () => {
                     fetchData(true); 
                     setNotification({ message: 'Shift created successfully', type: 'success' });
                 }}
-                clientId={selectedClientId}
             />
 
             {/* Edit Modal */}
@@ -355,7 +354,6 @@ const ShiftMasterPage: React.FC = () => {
                     fetchData(true);
                     setNotification({ message: 'Shift updated successfully', type: 'success' });
                 }}
-                clientId={selectedClientId}
                 initialData={selectedShift}
             />
 

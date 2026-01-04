@@ -33,6 +33,7 @@ import TalentPoolEmployeesPage from './pages/TalentPoolEmployeePage';
 import OnboardEmployeePage from './pages/OnboardEmployeePage';
 import CombineEmployee from './pages/CombineEmployee';
 import ShiftMasterPage from './pages/ShiftMasterPage';
+import ShiftPatternPage from './pages/ShiftPatternPage';
 
 export function App() {
   useEffect(() => {
@@ -64,6 +65,7 @@ export function App() {
                       <Route path="/client-directory" element={<ClientsPage />} />
                       <Route path="/employees" element={<CombineEmployee />} />
                       <Route path="/shift-master" element={<ShiftMasterPage />} />
+                      <Route path="/shift-pattern" element={<ShiftPatternPage />} />
                       <Route path="/talent-pool" element={<TalentPoolEmployeesPage />} />
                       <Route path="/onboarding" element={<OnboardEmployeePage />} />
                       <Route path="/trip" element={<TripsPage />} />

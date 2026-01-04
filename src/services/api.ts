@@ -19,6 +19,7 @@ import { Client } from '../types/client';
 import { Employee, EmployeeFormDto, EmployeeSearchParams, OnboardEmployeeRequest } from '../types/employee';
 import { JobReference } from '../types/job-reference';
 import { CreateShiftMasterRequest, ShiftMasterDTO } from '../types/shift-master';
+import { BulkPatternItemsRequest, CreatePatternRequest, ShiftPattern } from '../types/shift-pattern';
 
 export interface PaginationParams {
   page?: number;
@@ -307,7 +308,7 @@ export const shiftMasterService = {
     }
   },
 
-  getShiftMasterById: async (id: number): Promise<ShiftMasterDTO> => {
+  getShiftMasterById: async (id: string): Promise<ShiftMasterDTO> => {
     try {
       const response = await api.get(`/shift-masters/${id}`);
       return response.data;
@@ -315,6 +316,13 @@ export const shiftMasterService = {
       console.error(`Error fetching shift masters with id ${id}:`, error);
       throw error;
     }
+  },
+
+  getByClient: async (clientId: string): Promise<ShiftMasterDTO[]> => {
+    const response = await api.get<ShiftMasterDTO[]>('/shift-masters', {
+      params: { clientId },
+    });
+    return response.data;
   },
 
   createShiftMaster: async (shiftMaster: Omit<CreateShiftMasterRequest, 'id'>): Promise<string> => {
@@ -1638,6 +1646,24 @@ export const jobReferenceService = {
     return api
       .get<JobReference[]>('/job-references')
       .then(res => res.data);
+  },
+};
+
+export const shiftPatternService = {
+  getByClient: async (clientId: string): Promise<ShiftPattern[]> => {
+    const response = await api.get<ShiftPattern[]>('/shift-pattern', {
+      params: { clientId },
+    });
+    return response.data;
+  },
+
+  create: async (req: CreatePatternRequest): Promise<string> => {
+    const response = await api.post<string>('/shift-pattern', req);
+    return response.data;
+  },
+
+  addItems: async (req: BulkPatternItemsRequest): Promise<void> => {
+    await api.post('/shift-pattern/items', req);
   },
 };
 

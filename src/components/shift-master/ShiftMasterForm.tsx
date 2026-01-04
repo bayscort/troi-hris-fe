@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, Clock, AlertCircle } from 'lucide-react';
 import { ShiftMasterDTO, CreateShiftMasterRequest } from '../../types/shift-master';
-import { shiftMasterService } from '../../services/api'; 
+// Pastikan ClientDTO diimport atau didefinisikan jika ada type khususnya
+import { shiftMasterService, clientService } from '../../services/api'; 
 
 interface ShiftMasterFormProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void; 
   initialData?: ShiftMasterDTO | null;
-  clientId: string;
+  // clientId prop mungkin masih berguna sebagai default, tapi sekarang bisa dipilih via dropdown
+  defaultClientId?: string; 
 }
 
 const ShiftMasterForm: React.FC<ShiftMasterFormProps> = ({
@@ -16,11 +18,11 @@ const ShiftMasterForm: React.FC<ShiftMasterFormProps> = ({
   onClose,
   onSuccess,
   initialData,
-  clientId,
+  defaultClientId,
 }) => {
-  // Default State
+  // --- STATE ---
   const [formData, setFormData] = useState<CreateShiftMasterRequest>({
-    clientId: clientId,
+    clientId: defaultClientId || '',
     code: '',
     name: '',
     startTime: '',
@@ -29,27 +31,50 @@ const ShiftMasterForm: React.FC<ShiftMasterFormProps> = ({
     isDayOff: false,
     lateToleranceMinutes: 0,
     clockInWindowMinutes: 60,
-    color: '#4CAF50', // Default Green
+    color: '#4CAF50',
   });
 
+  const [clients, setClients] = useState<any[]>([]); // State untuk list client
+  const [isLoadingClients, setIsLoadingClients] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof CreateShiftMasterRequest, string>>>({});
-  
-  // State baru untuk handle API process
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
 
-  // Load Data for Edit Mode
+  // --- EFFECT: Load Clients ---
   useEffect(() => {
-    // Reset error ketika modal dibuka/tutup/data berubah
+    if (isOpen) {
+      fetchClients();
+    }
+  }, [isOpen]);
+
+  const fetchClients = async () => {
+    setIsLoadingClients(true);
+    try {
+      // Sesuaikan nama method dengan yang ada di api.ts Anda
+      // Contoh: const response = await clientService.getAll();
+      // Asumsi response.data adalah array client
+      const response = await clientService.getAllClients(); 
+      setClients(response); 
+    } catch (error) {
+      console.error("Failed to load clients", error);
+      setApiError("Failed to load client list.");
+    } finally {
+      setIsLoadingClients(false);
+    }
+  };
+
+  // --- EFFECT: Set Form Data on Edit/Create ---
+  useEffect(() => {
     setApiError(null); 
     setErrors({});
 
     if (initialData) {
+      // EDIT MODE
       setFormData({
-        clientId: initialData.client.id,
+        clientId: initialData.client.id, // Ambil ID dari object client di initialData
         code: initialData.code,
         name: initialData.name,
-        startTime: initialData.startTime ? initialData.startTime.substring(0, 5) : '', // Safety check
+        startTime: initialData.startTime ? initialData.startTime.substring(0, 5) : '',
         endTime: initialData.endTime ? initialData.endTime.substring(0, 5) : '',
         isCrossDay: initialData.isCrossDay,
         isDayOff: initialData.isDayOff,
@@ -58,9 +83,9 @@ const ShiftMasterForm: React.FC<ShiftMasterFormProps> = ({
         color: initialData.color || '#4CAF50',
       });
     } else {
-      // Reset form for create mode
+      // CREATE MODE
       setFormData({
-        clientId: clientId,
+        clientId: defaultClientId || '',
         code: '',
         name: '',
         startTime: '',
@@ -72,8 +97,9 @@ const ShiftMasterForm: React.FC<ShiftMasterFormProps> = ({
         color: '#4CAF50',
       });
     }
-  }, [initialData, clientId, isOpen]);
+  }, [initialData, defaultClientId, isOpen]);
 
+  // --- HANDLERS ---
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     let newValue: any = value;
@@ -86,7 +112,6 @@ const ShiftMasterForm: React.FC<ShiftMasterFormProps> = ({
 
     setFormData((prev) => ({ ...prev, [name]: newValue }));
     
-    // Clear validation error when user types
     if (errors[name as keyof CreateShiftMasterRequest]) {
       setErrors(prev => ({ ...prev, [name]: undefined }));
     }
@@ -94,6 +119,7 @@ const ShiftMasterForm: React.FC<ShiftMasterFormProps> = ({
 
   const validate = (): boolean => {
     const newErrors: any = {};
+    if (!formData.clientId) newErrors.clientId = 'Client is required';
     if (!formData.code) newErrors.code = 'Code is required';
     if (!formData.name) newErrors.name = 'Shift name is required';
     
@@ -108,7 +134,6 @@ const ShiftMasterForm: React.FC<ShiftMasterFormProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!validate()) return;
 
     setIsSubmitting(true);
@@ -120,14 +145,10 @@ const ShiftMasterForm: React.FC<ShiftMasterFormProps> = ({
       } else {
         await shiftMasterService.createShiftMaster(formData);
       }
-
-      // Jika berhasil
-      onSuccess(); // Trigger refresh di parent
-      onClose();   // Tutup modal
-      
+      onSuccess(); 
+      onClose();   
     } catch (error: any) {
       console.error("Failed to save shift:", error);
-      // Menampilkan pesan error dari backend atau default
       setApiError(error.response?.data?.message || error.message || "An error occurred while saving data.");
     } finally {
       setIsSubmitting(false);
@@ -164,6 +185,30 @@ const ShiftMasterForm: React.FC<ShiftMasterFormProps> = ({
                 <span>{apiError}</span>
               </div>
             )}
+
+            {/* Row 0: Client Dropdown (NEW) */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Client *</label>
+              <select
+                name="clientId"
+                value={formData.clientId}
+                onChange={handleChange}
+                disabled={isSubmitting || isLoadingClients}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-[#ff6908] bg-white ${errors.clientId ? 'border-red-500' : 'border-gray-300'}`}
+              >
+                <option value="">-- Select Client --</option>
+                {isLoadingClients ? (
+                  <option disabled>Loading clients...</option>
+                ) : (
+                  clients.map((client) => (
+                    <option key={client.id} value={client.id}>
+                      {client.name}
+                    </option>
+                  ))
+                )}
+              </select>
+              {errors.clientId && <p className="text-xs text-red-500 mt-1">{errors.clientId}</p>}
+            </div>
 
             {/* Row 1: Code & Color */}
             <div className="grid grid-cols-3 gap-4">
@@ -312,12 +357,6 @@ const ShiftMasterForm: React.FC<ShiftMasterFormProps> = ({
               </div>
             </div>
             
-            {!formData.clientId && (
-                <div className="p-3 bg-red-50 text-red-700 text-sm rounded flex gap-2 items-center">
-                    <AlertCircle size={16}/>
-                    <span>Warning: No Client selected in filter.</span>
-                </div>
-            )}
           </div>
         </form>
 
@@ -333,7 +372,7 @@ const ShiftMasterForm: React.FC<ShiftMasterFormProps> = ({
           </button>
           <button
             onClick={handleSubmit}
-            disabled={isSubmitting || !formData.clientId}
+            disabled={isSubmitting} 
             className="flex items-center gap-2 px-4 py-2 bg-[#ff6908] text-white rounded-md text-sm font-medium hover:bg-[#e55e07] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? (
