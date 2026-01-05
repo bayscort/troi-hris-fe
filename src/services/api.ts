@@ -24,6 +24,7 @@ import { ClientSite } from '../types/client-site';
 import { JobPosition } from '../types/job-position';
 import { BulkAssignRequest } from '../types/assigment-shift';
 import { RosterResponse } from '../types/roster';
+import { DeployEmployeeRequest } from '../types/deployment';
 
 export interface PaginationParams {
   page?: number;
@@ -1722,6 +1723,15 @@ export const rosterService = {
   ): Promise<RosterResponse> => {
     const params = { siteId, startDate, endDate, jobPositionId };
     const response = await api.get<RosterResponse>('/roster/matrix', { params });
+    return response.data;
+  }
+};
+
+
+export const deploymentService = {
+  deploy: async (request: DeployEmployeeRequest) => {
+    // POST /api/v1/deploy
+    const response = await api.post('/placements/deploy', request);
     return response.data;
   }
 };

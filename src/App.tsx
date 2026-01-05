@@ -20,6 +20,7 @@ import ShiftMasterPage from './pages/ShiftMasterPage';
 import ShiftPatternPage from './pages/ShiftPatternPage';
 import ShiftAssignmentPage from './pages/ShiftAssignmentPage';
 import ShiftRosterPage from './pages/ShiftRosterPage';
+import DeploymentPage from './pages/DeploymentPage';
 
 export function App() {
   useEffect(() => {
@@ -50,6 +51,7 @@ export function App() {
                       <Route path="/combine-dashboard" element={<CombineDashboard />} />
                       <Route path="/client-directory" element={<ClientsPage />} />
                       <Route path="/employees" element={<CombineEmployee />} />
+                      <Route path="/deploy-employee" element={<DeploymentPage />} />
                       <Route path="/shift-roster" element={<ShiftRosterPage />} />
                       <Route path="/shift-assignment" element={<ShiftAssignmentPage />} />
                       <Route path="/shift-master" element={<ShiftMasterPage />} />

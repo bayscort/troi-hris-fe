@@ -3,10 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import {
   CircleHelp,
-  LayoutDashboard,
-  Route,
   MapPin,
-  Truck,
   SlidersHorizontal,
   User,
   UserCheck,
@@ -17,31 +14,21 @@ import {
   ChevronDown,
   ChevronRight,
   Menu,
-  FilePlus2,
-  FileText,
-  BookOpen,
-  Wallet,
-  Package,
-  IdCard,
   Shield,
-  CreditCard,
-  ScrollText,
-  ArrowLeftRight,
-  Coins,
+  CalendarDays,
+  Database,
+  Repeat,
+  Users,
+  Send,
 } from 'lucide-react';
 
 type SectionKey =
-  | 'analytic'
-  | 'general'
   | 'clientManagement'
   | 'employeeManagement'
   | 'workforceManagement'
   | 'timeAndAttendance'
   | 'shiftManagement'
-  | 'payrollAndBilling'
-  | 'finance'
   | 'userManagement'
-  | 'dataManagement'
   | 'configuration'
   | 'support'
   | 'account';
@@ -53,17 +40,12 @@ const Sidebar = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const [isCollapsed, setIsCollapsed] = useState<Record<SectionKey, boolean>>({
-    analytic: true,
-    general: true,
     clientManagement: true,
     employeeManagement: true,
     workforceManagement: true,
     timeAndAttendance: true,
     shiftManagement: true,
-    payrollAndBilling: true,
-    finance: true,
     userManagement: true,
-    dataManagement: true,
     configuration: true,
     support: true,
     account: true,
@@ -81,39 +63,19 @@ const Sidebar = () => {
   };
 
   const menuItems = [
-    { name: 'Dashboard', path: '/combine-dashboard', icon: <LayoutDashboard size={20} className="mr-3" />, apiName: 'dashboard' },
-    { name: 'Client Directory', path: '/client-directory', icon: <Coins size={20} className="mr-3" />, apiName: 'client-directory' },
-    { name: 'Client Site', path: '/client-site', icon: <Coins size={20} className="mr-3" />, apiName: 'client-site' },
-    { name: 'Employees', path: '/employees', icon: <Coins size={20} className="mr-3" />, apiName: 'employees' },
-    { name: 'Talent Pool', path: '/talent-pool', icon: <Coins size={20} className="mr-3" />, apiName: 'talent-pool' },
-    { name: 'Onboarding', path: '/onboarding', icon: <Coins size={20} className="mr-3" />, apiName: 'onboarding' },
-    { name: 'Offboarding', path: '/offboarding', icon: <Coins size={20} className="mr-3" />, apiName: 'offboarding' },
-    { name: 'Document Center', path: '/document-center', icon: <Coins size={20} className="mr-3" />, apiName: 'document-center' },
-    { name: 'Active Placement', path: '/active-placement', icon: <Coins size={20} className="mr-3" />, apiName: 'active-placement' },
-    { name: 'Deploy Employee', path: '/deploy-employee', icon: <Coins size={20} className="mr-3" />, apiName: 'deploy-employee' },
-    { name: 'Expiring Contract', path: '/expiring-contract', icon: <Coins size={20} className="mr-3" />, apiName: 'expiring-contract' },
+    
+    { name: 'Client Directory', path: '/client-directory', icon: <Building2 size={20} className="mr-3" />, apiName: 'client-directory' },
+    { name: 'Client Site', path: '/client-site', icon: <MapPin size={20} className="mr-3" />, apiName: 'client-site' },
+    { name: 'Employees', path: '/employees', icon: <Users size={20} className="mr-3" />, apiName: 'employees' },
+    { name: 'Active Placement', path: '/active-placement', icon: <UserCheck size={20} className="mr-3" />, apiName: 'active-placement' },
+    { name: 'Deploy Employee', path: '/deploy-employee', icon: <Send size={20} className="mr-3" />, apiName: 'deploy-employee' },
     { name: 'Attendance Logs', path: '/attendance-log', icon: <BarChart2 size={20} className="mr-3" />, apiName: 'attendance-log' },
-    { name: 'Shift Roster', path: '/shift-roster', icon: <BarChart2 size={20} className="mr-3" />, apiName: 'shift-roster' },
-    { name: 'Shift Assignment', path: '/shift-assignment', icon: <BarChart2 size={20} className="mr-3" />, apiName: 'shift-assignment' },
-    { name: 'Shift Master', path: '/shift-master', icon: <BarChart2 size={20} className="mr-3" />, apiName: 'shift-master' },
-    { name: 'Shift Pattern', path: '/shift-pattern', icon: <BarChart2 size={20} className="mr-3" />, apiName: 'shift-pattern' },
-    { name: 'Finance Report', path: '/combine-finance-report', icon: <Coins size={20} className="mr-3" />, apiName: 'combine-finance-report' },
-    { name: 'Trip', path: '/trip', icon: <Route size={20} className="mr-3" />, apiName: 'trip' },
-    { name: 'Fund Request', path: '/fund-request', icon: <FilePlus2 size={20} className="mr-3" />, apiName: 'fund-request' },
-    { name: 'Receipt', path: '/receipt', icon: <FileText size={20} className="mr-3" />, apiName: 'receipt' },
-    { name: 'Expenditure', path: '/expenditure', icon: <CreditCard size={20} className="mr-3" />, apiName: 'expenditure' },
-    { name: 'Ledger', path: '/ledger', icon: <BookOpen size={20} className="mr-3" />, apiName: 'ledger' },
-    { name: 'Bank Statement', path: '/bank-statement', icon: <ScrollText size={20} className="mr-3" />, apiName: 'bank-statement' },
-    { name: 'Reconciliation', path: '/reconciliation', icon: <ArrowLeftRight size={20} className="mr-3" />, apiName: 'reconciliation' },
+    { name: 'Shift Roster', path: '/shift-roster', icon: <CalendarDays size={20} className="mr-3" />, apiName: 'shift-roster' },
+    { name: 'Shift Assignment', path: '/shift-assignment', icon: <UserCheck size={20} className="mr-3" />, apiName: 'shift-assignment' },
+    { name: 'Shift Master', path: '/shift-master', icon: <Database size={20} className="mr-3" />, apiName: 'shift-master' },
+    { name: 'Shift Pattern', path: '/shift-pattern', icon: <Repeat size={20} className="mr-3" />, apiName: 'shift-pattern' },
     { name: 'User', path: '/user', icon: <User size={20} className="mr-3" />, apiName: 'user' },
     { name: 'Role', path: '/role', icon: <Shield size={20} className="mr-3" />, apiName: 'role' },
-    { name: 'Location', path: '/location', icon: <MapPin size={20} className="mr-3" />, apiName: 'location' },
-    { name: 'Driver', path: '/driver', icon: <IdCard size={20} className="mr-3" />, apiName: 'driver' },
-    { name: 'Contractor', path: '/contractor', icon: <Building2 size={20} className="mr-3" />, apiName: 'contractor' },
-    { name: 'Vehicle', path: '/vehicle', icon: <Truck size={20} className="mr-3" />, apiName: 'vehicle' },
-    { name: 'Finance Item', path: '/finance-item', icon: <Package size={20} className="mr-3" />, apiName: 'finance-item' },
-    { name: 'Finance Account', path: '/account', icon: <Wallet size={20} className="mr-3" />, apiName: 'account' },
-    { name: 'Rate', path: '/rate', icon: <SlidersHorizontal size={20} className="mr-3" />, apiName: 'rate-configuration' },
     { name: 'Role Permission', path: '/role-permission-configuration', icon: <Lock size={20} className="mr-3" />, apiName: 'role-permission-configuration' },
     { name: 'Help Center', path: '/contact-support', icon: <CircleHelp size={20} className="mr-3" />, apiName: null },
   ];
@@ -155,23 +117,7 @@ const Sidebar = () => {
       </div>
 
       <div className="flex-1 overflow-y-auto px-3 pb-6">
-        <div className="bg-gray-100 rounded-md p-2 mb-4">
-          {filteredMenuItems
-            .filter((item) => item.name === 'Dashboard')
-            .map((item) => (
-              <div
-                key={item.name}
-                className="flex items-center px-3 py-2 text-gray-800 rounded-md bg-white shadow-sm cursor-pointer hover:bg-gray-50 transition-colors duration-200"
-                onClick={() => navigate(item.path)}
-                title={isSidebarCollapsed ? item.name : ''}
-              >
-                {item.icon}
-                {!isSidebarCollapsed && (
-                  <span className="font-medium text-sm">{item.name}</span>
-                )}
-              </div>
-            ))}
-        </div>
+        
 
         <div className="mb-4">
           <div
@@ -266,7 +212,7 @@ const Sidebar = () => {
           {!isCollapsed.workforceManagement && !isSidebarCollapsed && (
             <ul className="space-y-1 mt-2">
               {filteredMenuItems
-                .filter((item) => ['Active Placement', 'Deploy Employee', 'Expiring Contract'].includes(item.name))
+                .filter((item) => ['Active Placement', 'Deploy Employee'].includes(item.name))
                 .map((item) => (
                   <li
                     key={item.name}
@@ -299,7 +245,7 @@ const Sidebar = () => {
             )}
             {isSidebarCollapsed && <UserCheck size={20} />}
           </div>
-          {!isCollapsed.workforceManagement && !isSidebarCollapsed && (
+          {!isCollapsed.timeAndAttendance && !isSidebarCollapsed && (
             <ul className="space-y-1 mt-2">
               {filteredMenuItems
                 .filter((item) => ['Attendance Logs'].includes(item.name))
