@@ -304,15 +304,30 @@ export const clientService = {
 
 export const clientSiteService = {
   getClientSiteByClientId: async (clientId: string): Promise<ClientSite[]> => {
-    try {
-      const response = await api.get(`/client-sites/client/${clientId}`);
-      return response.data;
-    } catch (error) {
-      console.error(`Error fetching client sites with clientId ${clientId}:`, error);
-      throw error;
-    }
+    const response = await api.get(`/client-sites/client/${clientId}`);
+    return response.data;
   },
+
+  createClientSite: async (
+    payload: Omit<ClientSite, 'id'>
+  ): Promise<ClientSite> => {
+    const response = await api.post('/client-sites', payload);
+    return response.data;
+  },
+
+  updateClientSite: async (
+    id: string,
+    payload: Omit<ClientSite, 'id'>
+  ): Promise<ClientSite> => {
+    const response = await api.put(`/client-sites/${id}`, payload);
+    return response.data;
+  },
+
+  deleteClientSite: async (id: string): Promise<void> => {
+    await api.delete(`/client-sites/${id}`);
+  }
 };
+
 
 export const jobPositionService = {
   getJobPositionByClientId: async (clientId: string): Promise<JobPosition[]> => {

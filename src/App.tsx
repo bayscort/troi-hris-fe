@@ -13,6 +13,7 @@ import ContactSupportPage from './pages/ContactSupportPage';
 import AccountsPage from './pages/AccountPage';
 import CombineDashboard from './pages/CombineDashboard';
 import ClientsPage from './pages/ClientsPage';
+import ClientsSitePage from './pages/ClientsSitePage';
 import TalentPoolEmployeesPage from './pages/TalentPoolEmployeePage';
 import OnboardEmployeePage from './pages/OnboardEmployeePage';
 import CombineEmployee from './pages/CombineEmployee';
@@ -21,6 +22,7 @@ import ShiftPatternPage from './pages/ShiftPatternPage';
 import ShiftAssignmentPage from './pages/ShiftAssignmentPage';
 import ShiftRosterPage from './pages/ShiftRosterPage';
 import DeploymentPage from './pages/DeploymentPage';
+import AttendanceLogPage from './pages/AttendanceLogPage';
 
 export function App() {
   useEffect(() => {
@@ -50,6 +52,8 @@ export function App() {
                       <Route path="/home" element={<HomePage />} />
                       <Route path="/combine-dashboard" element={<CombineDashboard />} />
                       <Route path="/client-directory" element={<ClientsPage />} />
+                      <Route path="/client-site" element={<ClientsSitePage />} />
+                      <Route path="/attendance-log" element={<AttendanceLogPage />} />
                       <Route path="/employees" element={<CombineEmployee />} />
                       <Route path="/deploy-employee" element={<DeploymentPage />} />
                       <Route path="/shift-roster" element={<ShiftRosterPage />} />
