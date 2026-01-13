@@ -11,7 +11,6 @@ import RolesPage from './pages/RolesPage';
 import RolePermissionsPage from './pages/RolePermissionsPage';
 import ContactSupportPage from './pages/ContactSupportPage';
 import AccountsPage from './pages/AccountPage';
-import CombineDashboard from './pages/CombineDashboard';
 import ClientsPage from './pages/ClientsPage';
 import ClientsSitePage from './pages/ClientsSitePage';
 import TalentPoolEmployeesPage from './pages/TalentPoolEmployeePage';
@@ -50,7 +49,6 @@ export function App() {
                   <div className="flex-1 overflow-y-auto">
                     <Routes>
                       <Route path="/home" element={<HomePage />} />
-                      <Route path="/combine-dashboard" element={<CombineDashboard />} />
                       <Route path="/client-directory" element={<ClientsPage />} />
                       <Route path="/client-site" element={<ClientsSitePage />} />
                       <Route path="/attendance-log" element={<AttendanceLogPage />} />

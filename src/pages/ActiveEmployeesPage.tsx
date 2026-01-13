@@ -7,7 +7,6 @@ import {
   Plus,
   RefreshCw,
   Search,
-  Trash,
   CheckCircle,
   Briefcase,
   UserMinus,
@@ -109,7 +108,7 @@ const ActiveEmployeesPage: React.FC = () => {
       setLoading(true);
       try {
         // Fetch khusus status DEPLOYED & INTERNAL (Active)
-        const data = await employeeService.getEmployees('DEPLOYED'); 
+        const data = await employeeService.getEmployees('DEPLOYED');
         setEmployees(data);
         setFilteredEmployees(data);
         setError(null);
@@ -126,7 +125,7 @@ const ActiveEmployeesPage: React.FC = () => {
     const term = searchTerm.toLowerCase();
     setFilteredEmployees(
       employees.filter(e =>
-        e.fullName.toLowerCase().includes(term) || 
+        e.fullName.toLowerCase().includes(term) ||
         e.employeeNumber.toLowerCase().includes(term) ||
         (e.currentClient && e.currentClient.toLowerCase().includes(term))
       )
@@ -184,10 +183,10 @@ const ActiveEmployeesPage: React.FC = () => {
     <div className="p-8 flex-1 overflow-auto bg-white text-gray-800 font-sans">
       <div className="flex justify-between items-center mb-6">
         <div>
-            <h1 className="text-2xl font-semibold">Active Employees</h1>
-            <p className="text-gray-500 text-sm mt-1">Manage deployed employees and internal staff.</p>
+          <h1 className="text-2xl font-semibold">Active Employees</h1>
+          <p className="text-gray-500 text-sm mt-1">Manage deployed employees and internal staff.</p>
         </div>
-        
+
         {hasPermission('employee-management', 'CREATE') && (
           <button
             onClick={() => setIsCreateModalOpen(true)}
@@ -268,25 +267,25 @@ const ActiveEmployeesPage: React.FC = () => {
                   <td className="px-4 py-3">
                     <div className="font-medium text-gray-900">{e.fullName}</div>
                     <div className="text-xs text-gray-500 mt-0.5">
-                       ID: {e.identityNumber || '-'}
+                      ID: {e.identityNumber || '-'}
                     </div>
                   </td>
 
                   {/* Placement Info (Fitur Utama Outsourcing) */}
                   <td className="px-4 py-3">
                     {e.currentClient ? (
-                        <div className="flex flex-col">
-                            <span className="flex items-center gap-1.5 text-gray-900 font-medium">
-                                <Briefcase size={14} className="text-orange-500" />
-                                {e.currentClient}
-                            </span>
-                            <span className="flex items-center gap-1.5 text-xs text-gray-500 mt-0.5 ml-0.5">
-                                <MapPin size={12} />
-                                {e.jobTitle || 'No Title'}
-                            </span>
-                        </div>
+                      <div className="flex flex-col">
+                        <span className="flex items-center gap-1.5 text-gray-900 font-medium">
+                          <Briefcase size={14} className="text-orange-500" />
+                          {e.currentClient}
+                        </span>
+                        <span className="flex items-center gap-1.5 text-xs text-gray-500 mt-0.5 ml-0.5">
+                          <MapPin size={12} />
+                          {e.jobTitle || 'No Title'}
+                        </span>
+                      </div>
                     ) : (
-                        <span className="text-gray-400 italic text-xs">Internal / No Placement</span>
+                      <span className="text-gray-400 italic text-xs">Internal / No Placement</span>
                     )}
                   </td>
 
@@ -306,9 +305,9 @@ const ActiveEmployeesPage: React.FC = () => {
                   <td className="px-4 py-3 text-center">
                     <span
                       className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium 
-                        ${e.status === 'DEPLOYED' 
-                            ? 'bg-green-50 text-green-700 border border-green-100' 
-                            : 'bg-blue-50 text-blue-700 border border-blue-100' // Internal
+                        ${e.status === 'DEPLOYED'
+                          ? 'bg-green-50 text-green-700 border border-green-100'
+                          : 'bg-blue-50 text-blue-700 border border-blue-100' // Internal
                         }`}
                     >
                       {e.status}
@@ -330,7 +329,7 @@ const ActiveEmployeesPage: React.FC = () => {
                           <Eye size={16} />
                         </button>
                       )}
-                      
+
                       {hasPermission('employee-management', 'UPDATE') && (
                         <button
                           onClick={() => {
@@ -376,56 +375,56 @@ const ActiveEmployeesPage: React.FC = () => {
       {isCreateModalOpen && (
         // Gunakan komponen EmployeeForm nanti
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg">
-                <h2 className="text-xl font-bold mb-4">Onboard New Employee</h2>
-                <p>Form component goes here...</p>
-                <button onClick={() => setIsCreateModalOpen(false)} className="mt-4 px-4 py-2 bg-gray-200 rounded">Close</button>
-            </div>
+          <div className="bg-white p-6 rounded-lg">
+            <h2 className="text-xl font-bold mb-4">Onboard New Employee</h2>
+            <p>Form component goes here...</p>
+            <button onClick={() => setIsCreateModalOpen(false)} className="mt-4 px-4 py-2 bg-gray-200 rounded">Close</button>
+          </div>
         </div>
       )}
 
       {/* Offboard Modal (Gantikan DeleteConfirmation) */}
       {isOffboardModalOpen && selectedEmployee && (
-         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-         <div className="bg-white p-6 rounded-lg w-[400px]">
-             <div className="flex items-center gap-3 text-red-600 mb-4">
-                 <AlertTriangle size={24} />
-                 <h2 className="text-xl font-bold">Confirm Offboarding</h2>
-             </div>
-             <p className="text-sm text-gray-600 mb-4">
-                 Are you sure you want to offboard <b>{selectedEmployee.fullName}</b>? 
-                 This will terminate their active placement and disable app access.
-             </p>
-             
-             {/* Simple Form Placeholder for Reason */}
-             <div className="space-y-3 mb-6">
-                <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Effective Date</label>
-                    <input type="date" className="w-full border rounded px-2 py-1.5 text-sm" />
-                </div>
-                <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Reason</label>
-                    <select className="w-full border rounded px-2 py-1.5 text-sm">
-                        <option>Resign</option>
-                        <option>Contract Ended</option>
-                        <option>Terminated</option>
-                    </select>
-                </div>
-             </div>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg w-[400px]">
+            <div className="flex items-center gap-3 text-red-600 mb-4">
+              <AlertTriangle size={24} />
+              <h2 className="text-xl font-bold">Confirm Offboarding</h2>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">
+              Are you sure you want to offboard <b>{selectedEmployee.fullName}</b>?
+              This will terminate their active placement and disable app access.
+            </p>
 
-             <div className="flex justify-end gap-2">
-                 <button onClick={() => setIsOffboardModalOpen(false)} className="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 text-sm">Cancel</button>
-                 <button 
-                    onClick={() => confirmOffboard('Resign', new Date().toISOString())} 
-                    disabled={actionLoading}
-                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 flex items-center gap-2 text-sm"
-                 >
-                    {actionLoading && <Loader size={14} className="animate-spin" />}
-                    Confirm Offboard
-                 </button>
-             </div>
-         </div>
-     </div>
+            {/* Simple Form Placeholder for Reason */}
+            <div className="space-y-3 mb-6">
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Effective Date</label>
+                <input type="date" className="w-full border rounded px-2 py-1.5 text-sm" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Reason</label>
+                <select className="w-full border rounded px-2 py-1.5 text-sm">
+                  <option>Resign</option>
+                  <option>Contract Ended</option>
+                  <option>Terminated</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setIsOffboardModalOpen(false)} className="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 text-sm">Cancel</button>
+              <button
+                onClick={() => confirmOffboard('Resign', new Date().toISOString())}
+                disabled={actionLoading}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 flex items-center gap-2 text-sm"
+              >
+                {actionLoading && <Loader size={14} className="animate-spin" />}
+                Confirm Offboard
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
     </div>
