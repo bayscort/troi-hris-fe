@@ -72,10 +72,10 @@ interface TripFilterParams {
   tripTypeIds?: (string | number)[];
   loadWeightMin?: number;
   loadWeightMax?: number;
-  millNull?: boolean;      
-  afdelingNull?: boolean;  
-  driverNull?: boolean;    
-  vehicleNull?: boolean;   
+  millNull?: boolean;
+  afdelingNull?: boolean;
+  driverNull?: boolean;
+  vehicleNull?: boolean;
   contractorNull?: boolean;
   tripTypeNull?: boolean;
 }
@@ -351,6 +351,22 @@ export const assignmentShiftService = {
       throw error;
     }
   },
+
+  uploadManualSchedule: async (file: File): Promise<string> => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const response = await api.post('/shifts/upload-manual', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error uploading manual schedule:', error);
+      throw error;
+    }
+  },
 };
 
 export const shiftMasterService = {
@@ -618,7 +634,7 @@ export const userService = {
 export const tripService = {
   getAllTrips: async (
     pagination: PaginationParams = { page: 0, size: 10, sort: 'date,desc' },
-    filters: TripFilterParams = {} 
+    filters: TripFilterParams = {}
   ): Promise<ApiResponse<Trip>> => {
     try {
       const params: any = {
@@ -1697,10 +1713,10 @@ export const employeeService = {
   },
 
   getActiveBySite: async (siteId: string, jobPositionId?: string) => {
-        const params = { siteId, jobPositionId };
-        const response = await api.get('/placements/active-employees', { params });
-        return response.data;
-    }
+    const params = { siteId, jobPositionId };
+    const response = await api.get('/placements/active-employees', { params });
+    return response.data;
+  }
 };
 
 export const jobReferenceService = {
@@ -1731,8 +1747,8 @@ export const shiftPatternService = {
 
 export const rosterService = {
   getMatrix: async (
-    siteId: string, 
-    startDate: string, 
+    siteId: string,
+    startDate: string,
     endDate: string,
     jobPositionId?: string
   ): Promise<RosterResponse> => {
