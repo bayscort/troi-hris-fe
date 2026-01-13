@@ -6,11 +6,9 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/LoginPage';
 import Sidebar from './components/Sidebar';
 import HomePage from './pages/HomePage';
-import UsersPage from './pages/UserPage';
 import RolesPage from './pages/RolesPage';
 import RolePermissionsPage from './pages/RolePermissionsPage';
 import ContactSupportPage from './pages/ContactSupportPage';
-import AccountsPage from './pages/AccountPage';
 import ClientsPage from './pages/ClientsPage';
 import ClientsSitePage from './pages/ClientsSitePage';
 import TalentPoolEmployeesPage from './pages/TalentPoolEmployeePage';
@@ -60,8 +58,6 @@ export function App() {
                       <Route path="/shift-pattern" element={<ShiftPatternPage />} />
                       <Route path="/talent-pool" element={<TalentPoolEmployeesPage />} />
                       <Route path="/onboarding" element={<OnboardEmployeePage />} />
-                      <Route path="/account" element={<AccountsPage />} />
-                      <Route path="/user" element={<UsersPage />} />
                       <Route path="/role" element={<RolesPage />} />
                       <Route path="/role-permission-configuration" element={<RolePermissionsPage />} />
                       <Route path="/contact-support" element={<ContactSupportPage />} />
