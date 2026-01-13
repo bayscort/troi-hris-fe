@@ -11,6 +11,7 @@ import { BulkAssignRequest } from '../types/assigment-shift';
 import { RosterResponse } from '../types/roster';
 import { DeployEmployeeRequest } from '../types/deployment';
 import { Client } from '../types/client';
+import { AttendanceResponse } from '../types/attendance';
 
 export interface PaginationParams {
   page?: number;
@@ -132,6 +133,20 @@ export const jobPositionService = {
       return response.data;
     } catch (error) {
       console.error(`Error fetching job positions with clientId ${clientId}:`, error);
+      throw error;
+    }
+  },
+};
+
+export const attendanceService = {
+  getAttendanceListAll: async (start: string, end: string): Promise<AttendanceResponse[]> => {
+    try {
+      const response = await api.get('/attendance/list/all', {
+        params: { start, end }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching attendance list:', error);
       throw error;
     }
   },
