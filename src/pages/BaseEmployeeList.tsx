@@ -87,6 +87,12 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
   const [showForm, setShowForm] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
 
+  const [filterOpen, setFilterOpen] = useState(false);
+  const filterRef = useRef<HTMLDivElement>(null);
+
+  const [sortOpen, setSortOpen] = useState(false);
+  const sortRef = useRef<HTMLDivElement>(null);
+
   const [search, setSearch] = useState('');
 
   type FilterOperator = 'eq' | 'gte' | 'lte' | 'contains';
@@ -324,8 +330,6 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
     });
   };
 
-
-
   const [rawEmployees, setRawEmployees] = useState<Employee[]>([]);
 
   const fetchData = async () => {
@@ -345,27 +349,55 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
     }
     };
 
-    useEffect(() => {
-        let data = [...rawEmployees];
+  useEffect(() => {
+      let data = [...rawEmployees];
+      // SEARCH
+      if (search) {
+          data = data.filter(e =>
+          e.fullName.toLowerCase().includes(search.toLowerCase()) ||
+          e.employeeNumber.toLowerCase().includes(search.toLowerCase())
+          );
+          }
 
-        // SEARCH
-        if (search) {
-            data = data.filter(e =>
-            e.fullName.toLowerCase().includes(search.toLowerCase()) ||
-            e.employeeNumber.toLowerCase().includes(search.toLowerCase())
-            );
-        }
+      // FILTER
+      data = applyFilters(data);
 
-        // FILTER
-        data = applyFilters(data);
+      // SORT
+      data = applySort(data);
 
-        // SORT
-        data = applySort(data);
+      setEmployees(data);
 
-        setEmployees(data);
-
-        }, [rawEmployees, search, filters]
+      }, [rawEmployees, search, filters]
     );
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        filterRef.current &&
+        !filterRef.current.contains(e.target as Node)
+      ) {
+        setFilterOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+        if (
+          sortRef.current &&
+          !sortRef.current.contains(e.target as Node)
+        ) {
+          setSortOpen(false);
+        }
+      };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
 
   useEffect(() => {
     fetchData();
@@ -463,202 +495,228 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
               />
             </div>
 
-            {/* FILTER DROPDOWN */}
-            <div className="relative group">
-              <button className="flex items-center gap-1.5 px-3 py-2 border rounded-md text-sm hover:bg-gray-50">
+            <div ref={filterRef} className="relative">
+              {/* BUTTON */}
+              <button
+                onClick={() => setFilterOpen(prev => !prev)}
+                className="flex items-center gap-1.5 px-3 py-2 border rounded-md text-sm hover:bg-gray-50"
+                >
                 <SlidersHorizontal size={16} />
                 Filter
               </button>
 
               {/* DROPDOWN */}
-              <div className="absolute left-0 mt-2 hidden group-hover:block z-10">
-                <div className="bg-white border rounded-lg shadow-lg p-3 min-w-[320px]">
-                  {/* ⬇️ PINDAHKAN MULTI FILTER ROWS KE SINI */}
-                  {/* MULTI FILTER ROWS */}
-                  {/* MULTI FILTER ROWS (AND / OR) */}
-                  <div className="space-y-2 border-t pt-4">
+              {filterOpen && (
+                <div className="absolute left-0 mt-2 z-20">
+                  <div className="bg-white border rounded-lg shadow-lg p-3 min-w-[320px]">
 
-                    {filters.map((f, idx) => {
-                      const def = FILTER_DEFINITIONS.find(d => d.field === f.field);
+                    {/* MULTI FILTER ROWS (AND / OR) */}
+                    <div className="space-y-2 border-t pt-4">
 
-                      return (
-                        <div
-                          key={f.id}
-                          className="flex flex-wrap items-center gap-2"
-                        >
-                          {/* FIELD */}
-                          <select
-                            value={f.field ?? ''}
-                            onChange={(e) => {
-                              const field = e.target.value as FilterField;
-                              const def = FILTER_DEFINITIONS.find(d => d.field === field);
+                      {filters.map((f, idx) => {
+                        const def = FILTER_DEFINITIONS.find(d => d.field === f.field);
 
-                              updateFilter(f.id, {
-                                field,
-                                operator: def?.operators[0], // ✅ auto set default operator
-                                value: undefined,
-                              });
-                            }}
-                            className="text-sm border rounded-md px-2 py-1.5"
+                        return (
+                          <div
+                            key={f.id}
+                            className="flex flex-wrap items-center gap-2"
                           >
-                            <option value="">Field</option>
-                            {FILTER_DEFINITIONS.map(d => (
-                              <option key={d.field} value={d.field}>
-                                {d.label}
-                              </option>
-                            ))}
-                          </select>
-
-                          {/* OPERATOR (TAMPIL HANYA JIKA > 1) */}
-                          {def && def.operators.length > 1 && (
+                            {/* FIELD */}
                             <select
-                              value={f.operator ?? def.operators[0]}
-                              onChange={(e) =>
+                              value={f.field ?? ''}
+                              onChange={(e) => {
+                                const field = e.target.value as FilterField;
+                                const def = FILTER_DEFINITIONS.find(d => d.field === field);
+
                                 updateFilter(f.id, {
-                                  operator: e.target.value as FilterOperator,
-                                })
-                              }
+                                  field,
+                                  operator: def?.operators[0], // ✅ auto set default operator
+                                  value: undefined,
+                                });
+                              }}
                               className="text-sm border rounded-md px-2 py-1.5"
                             >
-                              {def.operators.map(op => (
-                                <option key={op} value={op}>
-                                  {operatorLabel(op)}
+                              <option value="">Field</option>
+                              {FILTER_DEFINITIONS.map(d => (
+                                <option key={d.field} value={d.field}>
+                                  {d.label}
                                 </option>
                               ))}
                             </select>
-                          )}
 
-                          {/* VALUE */}
-                          {def && (
-                            def.valueType === 'number' ? (
-                              <div className="flex items-center gap-2">
-                                <input
-                                  type="number"
+                            {/* OPERATOR (TAMPIL HANYA JIKA > 1) */}
+                            {def && def.operators.length > 1 && (
+                              <select
+                                value={f.operator ?? def.operators[0]}
+                                onChange={(e) =>
+                                  updateFilter(f.id, {
+                                    operator: e.target.value as FilterOperator,
+                                  })
+                                }
+                                className="text-sm border rounded-md px-2 py-1.5"
+                              >
+                                {def.operators.map(op => (
+                                  <option key={op} value={op}>
+                                    {operatorLabel(op)}
+                                  </option>
+                                ))}
+                              </select>
+                            )}
+
+                            {/* VALUE */}
+                            {def && (
+                              def.valueType === 'number' ? (
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="number"
+                                    value={f.value ?? ''}
+                                    onChange={(e) =>
+                                      updateFilter(f.id, { value: e.target.value })
+                                    }
+                                    className="text-sm border rounded-md px-2 py-1.5 w-28"
+                                    placeholder={`Enter ${def.unit ?? 'value'}`}   // ✅ step 3
+                                    min={0}
+                                  />
+
+                                  {/* AUTO UNIT – step 2 */}
+                                  {def.unit && (
+                                    <span className="text-sm text-gray-500">
+                                      {def.unit}
+                                    </span>
+                                  )}
+                                </div>
+                              ) : def.getOptions ? (
+                                <select
                                   value={f.value ?? ''}
                                   onChange={(e) =>
                                     updateFilter(f.id, { value: e.target.value })
                                   }
-                                  className="text-sm border rounded-md px-2 py-1.5 w-28"
-                                  placeholder={`Enter ${def.unit ?? 'value'}`}   // ✅ step 3
-                                  min={0}
+                                  className="text-sm border rounded-md px-2 py-1.5"
+                                >
+                                  <option value="">Value</option>
+                                  {def.getOptions(employees).map(v => (
+                                    <option key={v} value={v}>
+                                      {def.valueType === 'boolean'
+                                        ? v === 'true'
+                                          ? 'Active'
+                                          : 'Inactive'
+                                        : v}
+                                    </option>
+                                  ))}
+                                </select>
+                              ) : (
+                                <input
+                                  value={f.value ?? ''}
+                                  onChange={(e) =>
+                                    updateFilter(f.id, { value: e.target.value })
+                                  }
+                                  className="text-sm border rounded-md px-2 py-1.5"
+                                  placeholder="Value"
                                 />
+                              )
+                            )}
 
-                                {/* AUTO UNIT – step 2 */}
-                                {def.unit && (
-                                  <span className="text-sm text-gray-500">
-                                    {def.unit}
-                                  </span>
-                                )}
-                              </div>
-                            ) : def.getOptions ? (
+                            {/* LOGIC (AND / OR) */}
+                            {idx < filters.length - 1 && (
                               <select
-                                value={f.value ?? ''}
+                                value={f.logic ?? 'AND'}
                                 onChange={(e) =>
-                                  updateFilter(f.id, { value: e.target.value })
+                                  updateFilter(f.id, {
+                                    logic: e.target.value as LogicalOperator,
+                                  })
                                 }
                                 className="text-sm border rounded-md px-2 py-1.5"
                               >
-                                <option value="">Value</option>
-                                {def.getOptions(employees).map(v => (
-                                  <option key={v} value={v}>
-                                    {def.valueType === 'boolean'
-                                      ? v === 'true'
-                                        ? 'Active'
-                                        : 'Inactive'
-                                      : v}
-                                  </option>
-                                ))}
+                                <option value="AND">AND</option>
+                                <option value="OR">OR</option>
                               </select>
-                            ) : (
-                              <input
-                                value={f.value ?? ''}
-                                onChange={(e) =>
-                                  updateFilter(f.id, { value: e.target.value })
-                                }
-                                className="text-sm border rounded-md px-2 py-1.5"
-                                placeholder="Value"
-                              />
-                            )
-                          )}
+                            )}
 
-                          {/* LOGIC (AND / OR) */}
-                          {idx < filters.length - 1 && (
-                            <select
-                              value={f.logic ?? 'AND'}
-                              onChange={(e) =>
-                                updateFilter(f.id, {
-                                  logic: e.target.value as LogicalOperator,
-                                })
-                              }
-                              className="text-sm border rounded-md px-2 py-1.5"
-                            >
-                              <option value="AND">AND</option>
-                              <option value="OR">OR</option>
-                            </select>
-                          )}
+                            {/* REMOVE */}
+                            {filters.length > 1 && (
+                              <button
+                                onClick={() => removeFilter(f.id)}
+                                className="text-xs text-red-500 hover:underline"
+                              >
+                                Remove
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
 
-                          {/* REMOVE */}
-                          {filters.length > 1 && (
-                            <button
-                              onClick={() => removeFilter(f.id)}
-                              className="text-xs text-red-500 hover:underline"
-                            >
-                              Remove
-                            </button>
-                          )}
-                        </div>
-                      );
-                    })}
-
-                    {/* ADD FILTER */}
-                    <button
-                      onClick={addFilter}
-                      className="text-sm text-orange-600 hover:underline"
-                    >
-                      + Add Filter
-                    </button>
+                      {/* ADD FILTER */}
+                      <button
+                        onClick={addFilter}
+                        className="text-sm text-orange-600 hover:underline"
+                      >
+                        + Add Filter
+                      </button>
+                    </div>
+                    {/* (kode filter kamu tetap, hanya dipindahkan) */}
                   </div>
-                  {/* (kode filter kamu tetap, hanya dipindahkan) */}
                 </div>
-              </div>
+              )}
             </div>
 
-            {/* SORT DROPDOWN */}
-            <div className="relative group">
-              <button className="flex items-center gap-1.5 px-3 py-2 border rounded-md text-sm hover:bg-gray-50">
+            <div ref={sortRef} className="relative">
+              {/* BUTTON */}
+              <button
+                onClick={() => setSortOpen(prev => !prev)}
+                className="flex items-center gap-1.5 px-3 py-2 border rounded-md text-sm hover:bg-gray-50"
+              >
                 <ArrowUpDown size={16} />
                 Sort
               </button>
 
-              <div className="absolute left-0 mt-2 hidden group-hover:block z-10">
-                <div className="bg-white border rounded-lg shadow-lg p-2 min-w-[180px]">
-                  <button
-                    onClick={() => setSort({ key: 'fullName', direction: 'asc' })}
-                  >
-                    Name A–Z
-                  </button>
+              {/* DROPDOWN */}
+              {sortOpen && (
+                <div className="absolute left-0 mt-2 z-20">
+                  <div className="bg-white border rounded-lg shadow-lg p-2 min-w-[180px] space-y-1">
+                    <button
+                      onClick={() => {
+                        setSort({ key: 'fullName', direction: 'asc' });
+                        setSortOpen(false);
+                      }}
+                      className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded"
+                    >
+                      Name A–Z
+                    </button>
 
-                  <button
-                    onClick={() => setSort({ key: 'fullName', direction: 'desc' })}
-                  >
-                    Name Z–A
-                  </button>
+                    <button
+                      onClick={() => {
+                        setSort({ key: 'fullName', direction: 'desc' });
+                        setSortOpen(false);
+                      }}
+                      className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded"
+                    >
+                      Name Z–A
+                    </button>
 
-                  <button
-                    onClick={() => setSort({ key: 'experienceYears', direction: 'asc' })}
-                  >
-                    Experience ↑
-                  </button>
+                    <button
+                      onClick={() => {
+                        setSort({ key: 'experienceYears', direction: 'asc' });
+                        setSortOpen(false);
+                      }}
+                      className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded"
+                    >
+                      Experience ↑
+                    </button>
 
-                  <button
-                    onClick={() => setSort({ key: 'experienceYears', direction: 'desc' })}
-                  >
-                    Experience ↓
-                  </button>
-
+                    <button
+                      onClick={() => {
+                        setSort({ key: 'experienceYears', direction: 'desc' });
+                        setSortOpen(false);
+                      }}
+                      className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded"
+                    >
+                      Experience ↓
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
+
           </div>
 
           {/* RIGHT: ACTION BUTTONS */}
