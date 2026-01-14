@@ -86,6 +86,7 @@ export interface EmployeeFormDto {
 export interface JobReferenceForm {
   id?: string;
   jobReferenceId: string;
+  name: string;
   skillLevel: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
   experienceYears: number;
   certificationName?: string;
