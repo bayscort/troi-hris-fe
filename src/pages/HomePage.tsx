@@ -20,7 +20,7 @@ const HomePage = () => {
           className="h-12 w-12 rounded-xl border border-gray-200 shadow-sm"
         />
         <h2 className="text-2xl font-semibold text-gray-800 tracking-tight">
-          PT Berkah Bina Amanat
+          PT. Trust Offshore International
         </h2>
       </motion.div>
 

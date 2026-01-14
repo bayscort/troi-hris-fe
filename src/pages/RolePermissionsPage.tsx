@@ -19,8 +19,8 @@ const RolePermissionsPage: React.FC = () => {
   const [rolePermissions, setRolePermissions] = useState<RoleWithMenus[]>([]);
   const [allMenus, setAllMenus] = useState<AllMenu[]>([]);
   const [allPermissions, setAllPermissions] = useState<AllPermission[]>([]);
-  const [expandedRoles, setExpandedRoles] = useState<{ [key: number]: boolean }>({});
-  const [editingRoleId, setEditingRoleId] = useState<number | null>(null);
+  const [expandedRoles, setExpandedRoles] = useState<{ [key: string]: boolean }>({});
+  const [editingRoleId, setEditingRoleId] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,20 +54,20 @@ const RolePermissionsPage: React.FC = () => {
     }
   };
 
-  const toggleRoleExpansion = (roleId: number) => {
+  const toggleRoleExpansion = (roleId: string) => {
     setExpandedRoles((prev) => ({ ...prev, [roleId]: !prev[roleId] }));
   };
 
-  const handleEditRole = (roleId: number) => setEditingRoleId(roleId);
+  const handleEditRole = (roleId: string) => setEditingRoleId(roleId);
   const handleCloseEdit = () => {
     setEditingRoleId(null);
     fetchData();
   };
 
   const isPermissionAssigned = (
-    _roleId: number,
-    menuId: number,
-    permissionId: number,
+    _roleId: string,
+    menuId: string,
+    permissionId: string,
     roleItem: RoleWithMenus
   ) => {
     const menu = roleItem.menuList.find((m) => m.id === menuId);

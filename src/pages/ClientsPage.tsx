@@ -26,6 +26,9 @@ const ClientsPage: React.FC = () => {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [typeFilter, setTypeFilter] = useState<'all' | 'internal' | 'external'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+
   const [currentPage, setCurrentPage] = useState(1);
   const perPage = 10;
 
@@ -152,13 +155,32 @@ const ClientsPage: React.FC = () => {
 
   useEffect(() => {
     const term = searchTerm.toLowerCase();
+
     setFilteredClients(
-      clients.filter(d =>
-        d.name.toLowerCase().includes(term)
-      )
+      clients.filter(d => {
+        const matchSearch =
+          d.name.toLowerCase().includes(term);
+
+        const matchType =
+          typeFilter === 'all'
+            ? true
+            : typeFilter === 'internal'
+              ? d.isInternal
+              : !d.isInternal;
+
+        const matchStatus =
+          statusFilter === 'all'
+            ? true
+            : statusFilter === 'active'
+              ? d.active
+              : !d.active;
+
+        return matchSearch && matchType && matchStatus;
+      })
     );
+
     setCurrentPage(1);
-  }, [searchTerm, clients]);
+  }, [searchTerm, typeFilter, statusFilter, clients]);
 
   const handleSave = () => {
     setIsCreateModalOpen(false);
@@ -226,17 +248,42 @@ const ClientsPage: React.FC = () => {
       )}
 
       <div className="flex justify-between items-center mb-4">
-        <div className="relative">
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            placeholder="Search client…"
-            className="pl-10 pr-4 py-2 border rounded-md w-64 focus:ring-1 focus:ring-black focus:outline-none text-sm"
-          />
-          <Search size={16} className="absolute left-3 top-2.5 text-gray-400" />
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <input
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              placeholder="Search client…"
+              className="pl-10 pr-4 py-2 border rounded-md w-64 text-sm"
+            />
+            <Search size={16} className="absolute left-3 top-2.5 text-gray-400" />
+          </div>
+
+          <select
+            value={typeFilter}
+            onChange={e => setTypeFilter(e.target.value as any)}
+            className="px-3 py-2 border rounded-md text-sm bg-white"
+          >
+            <option value="all">All Types</option>
+            <option value="internal">Internal</option>
+            <option value="external">External</option>
+          </select>
+
+          <select
+            value={statusFilter}
+            onChange={e => setStatusFilter(e.target.value as any)}
+            className="px-3 py-2 border rounded-md text-sm bg-white"
+          >
+            <option value="all">All Status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
         </div>
-        <button onClick={() => setRefreshTrigger(prev => prev + 1)} disabled={loading} className="text-sm px-3 py-2 border rounded-md flex items-center gap-2 hover:bg-gray-100">
+
+        <button
+          onClick={() => setRefreshTrigger(p => p + 1)}
+          className="px-3 py-2 border rounded-md text-sm flex items-center gap-2 hover:bg-gray-100"
+        >
           {loading ? <Loader size={16} className="animate-spin" /> : <RefreshCw size={16} />}
           Refresh
         </button>
@@ -246,7 +293,6 @@ const ClientsPage: React.FC = () => {
         <table className="w-full text-sm">
           <thead className="bg-gray-50 text-left border-b border-gray-200">
             <tr>
-              <th className="px-4 py-3 font-medium text-gray-500 w-16">ID</th>
               <th className="px-4 py-3 font-medium text-gray-700">Client Info</th>
               <th className="px-4 py-3 font-medium text-gray-700">Contact</th>
               <th className="px-4 py-3 font-medium text-gray-700 text-center">Type</th>
@@ -280,12 +326,6 @@ const ClientsPage: React.FC = () => {
             ) : (
               currentClients.map((d) => (
                 <tr key={d.id} className="hover:bg-gray-50 transition-colors">
-
-                  {/* ID */}
-                  <td className="px-4 py-3 text-gray-500 font-mono text-xs">
-                    #{d.id}
-                  </td>
-
                   {/* Name & Code Combined for cleaner look */}
                   <td className="px-4 py-3">
                     <div className="font-medium text-gray-900">{d.name}</div>
