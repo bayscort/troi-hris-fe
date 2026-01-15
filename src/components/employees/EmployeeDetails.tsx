@@ -7,8 +7,12 @@ import {
   Briefcase,
   GraduationCap,
   ShieldCheck,
-  Pen,
+  Ruler,
+  Users,
+  PhoneCall,
+  CheckCircle,
   X,
+  Pen,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { EmployeeFormDto } from '../../types/employee';
@@ -43,11 +47,13 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
         {/* BODY */}
         <div className="overflow-y-auto px-8 py-6 space-y-8 flex-grow">
 
-          {/* BASIC INFO */}
-          <div className="bg-gray-50 rounded-xl p-5 border space-y-3">
+          {/* STEP 1: PERSONAL INFO */}
+          <div className="bg-gray-50 rounded-xl p-5 border space-y-4">
             <div className="flex items-center gap-2">
               <User size={18} className="text-[#ff6908]" />
-              <h3 className="text-sm font-semibold text-gray-700">Personal Information</h3>
+              <h3 className="text-sm font-semibold text-gray-700">
+                Personal Information
+              </h3>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
@@ -64,19 +70,29 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
                 <p className="text-gray-800">{employee.gender || '—'}</p>
               </div>
               <div>
+                <p className="text-gray-500">Identity Number</p>
+                <p className="text-gray-800">{employee.identityNumber || '—'}</p>
+              </div>
+              <div>
                 <p className="text-gray-500">Religion</p>
                 <p className="text-gray-800">{employee.religion || '—'}</p>
+              </div>
+              <div>
+                <p className="text-gray-500">Blood Type</p>
+                <p className="text-gray-800">{employee.bloodType || '—'}</p>
               </div>
             </div>
           </div>
 
-          {/* BIRTH & CONTACT */}
+          {/* STEP 2: BIRTH, CONTACT & ADDRESS */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
             <div className="bg-gray-50 rounded-xl p-5 border space-y-3">
               <div className="flex items-center gap-2">
                 <Calendar size={18} className="text-[#ff6908]" />
-                <h3 className="text-sm font-semibold text-gray-700">Birth Information</h3>
+                <h3 className="text-sm font-semibold text-gray-700">
+                  Birth Information
+                </h3>
               </div>
               <p className="text-sm text-gray-800">
                 {employee.placeOfBirth || '—'}
@@ -103,7 +119,6 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
 
           </div>
 
-          {/* ADDRESS */}
           <div className="bg-gray-50 rounded-xl p-5 border space-y-3">
             <div className="flex items-center gap-2">
               <MapPin size={18} className="text-[#ff6908]" />
@@ -117,11 +132,67 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
             </p>
           </div>
 
-          {/* JOB REFERENCES */}
+          {/* STEP 3: PHYSICAL & FAMILY */}
+          <div className="bg-gray-50 rounded-xl p-5 border space-y-4">
+            <div className="flex items-center gap-2">
+              <Ruler size={18} className="text-[#ff6908]" />
+              <h3 className="text-sm font-semibold text-gray-700">
+                Physical & Family
+              </h3>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <p className="text-gray-500">Height</p>
+                <p className="text-gray-800">
+                  {employee.heightCm ? `${employee.heightCm} cm` : '—'}
+                </p>
+              </div>
+              <div>
+                <p className="text-gray-500">Weight</p>
+                <p className="text-gray-800">
+                  {employee.weightKg ? `${employee.weightKg} kg` : '—'}
+                </p>
+              </div>
+              <div>
+                <p className="text-gray-500">Family Members</p>
+                <p className="text-gray-800">
+                  {employee.familyMemberCount ?? '—'}
+                </p>
+              </div>
+              <div>
+                <p className="text-gray-500">Employment Status</p>
+                <p className="text-gray-800 flex items-center gap-1">
+                  <CheckCircle size={14} className="text-green-600" />
+                  {employee.active ? 'Active' : 'Inactive'}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* STEP 4: EMERGENCY CONTACT */}
+          <div className="bg-gray-50 rounded-xl p-5 border space-y-3">
+            <div className="flex items-center gap-2">
+              <PhoneCall size={18} className="text-[#ff6908]" />
+              <h3 className="text-sm font-semibold text-gray-700">
+                Emergency Contact
+              </h3>
+            </div>
+            <p className="text-sm text-gray-800">
+              {employee.emergencyContactName || '—'}
+            </p>
+            <p className="text-sm text-gray-500">
+              {employee.emergencyContactPhone || '—'}
+            </p>
+          </div>
+
+          {/* STEP 5: JOB REFERENCES */}
           <div className="bg-gray-50 rounded-xl p-5 border space-y-4">
             <div className="flex items-center gap-2">
               <Briefcase size={18} className="text-[#ff6908]" />
-              <h3 className="text-sm font-semibold text-gray-700">Job References</h3>
+              <h3 className="text-sm font-semibold text-gray-700">
+                Job References
+              </h3>
             </div>
 
             {employee.jobReferences.length === 0 && (
@@ -129,14 +200,11 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
             )}
 
             <div className="space-y-3">
-              {employee.jobReferences.map((jr, index) => (
-                <div
-                  key={index}
-                  className="border rounded-lg p-4 bg-white space-y-2"
-                >
-                  <div className="flex justify-between items-center">
+              {employee.jobReferences.map((jr, i) => (
+                <div key={i} className="border rounded-lg p-4 bg-white space-y-2">
+                  <div className="flex justify-between">
                     <p className="text-sm font-medium text-gray-800">
-                      Job Reference ID
+                      {jr.name || 'Job Reference'}
                     </p>
                     {jr.primaryReference && (
                       <span className="text-xs bg-orange-100 text-[#e55e07] px-2 py-0.5 rounded">
@@ -144,14 +212,12 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
                       </span>
                     )}
                   </div>
-
                   <p className="text-sm text-gray-600">
                     Skill Level: {jr.skillLevel}
                   </p>
                   <p className="text-sm text-gray-600">
                     Experience: {jr.experienceYears} year(s)
                   </p>
-
                   {jr.certified && (
                     <div className="flex items-center gap-2 text-green-600 text-sm">
                       <ShieldCheck size={14} />
@@ -163,7 +229,7 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
             </div>
           </div>
 
-          {/* EDUCATION */}
+          {/* STEP 6: EDUCATION */}
           <div className="bg-gray-50 rounded-xl p-5 border space-y-4">
             <div className="flex items-center gap-2">
               <GraduationCap size={18} className="text-[#ff6908]" />
@@ -175,19 +241,16 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
             )}
 
             <div className="space-y-3">
-              {employee.educations.map((edu, index) => (
-                <div
-                  key={index}
-                  className="border rounded-lg p-4 bg-white"
-                >
+              {employee.educations.map((edu, i) => (
+                <div key={i} className="border rounded-lg p-4 bg-white">
                   <p className="text-sm font-medium text-gray-800">
                     {edu.schoolName}
                   </p>
                   <p className="text-sm text-gray-600">
-                    {edu.level} {edu.major ? `- ${edu.major}` : ''}
+                    {edu.level}
                   </p>
                   <p className="text-xs text-gray-500">
-                    {edu.startYear} – {edu.endYear || 'Present'}
+                    {edu.startYear}
                   </p>
                 </div>
               ))}

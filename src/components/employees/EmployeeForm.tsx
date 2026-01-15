@@ -1,5 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { X, ArrowLeft, ArrowRight, Save, Loader, Plus, Trash, User, Briefcase, GraduationCap, FileCheck } from 'lucide-react';
+
+import { 
+  X, ArrowLeft, ArrowRight, Save, Loader, Plus, Trash,
+  User, MapPin, PhoneCall, Users, Briefcase, GraduationCap, FileCheck 
+} from 'lucide-react';
+
 import { employeeService, jobReferenceService } from '../../services/api';
 import { EmployeeFormDto, JobReferenceForm, EducationForm } from '../../types/employee';
 
@@ -12,6 +17,7 @@ interface EmployeeFormProps {
 
 const emptyJobReference = (): JobReferenceForm => ({
   jobReferenceId: '',
+  name: '',
   skillLevel: 'BEGINNER',
   experienceYears: 0,
   certified: false,
@@ -33,7 +39,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
   const [currentStep, setCurrentStep] = useState(1);
   const [saving, setSaving] = useState(false);
   const [loadingRefs, setLoadingRefs] = useState(false);
-  
+
   const [jobReferenceOptions, setJobReferenceOptions] = useState<any[]>([]);
 
   const [formData, setFormData] = useState<EmployeeFormDto>({
@@ -52,7 +58,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
         const refs = await jobReferenceService.getAll();
         setJobReferenceOptions(refs);
       } catch (e) {
-        console.error("Failed to load references", e);
+        console.error('Failed to load references', e);
       } finally {
         setLoadingRefs(false);
       }
@@ -64,22 +70,52 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
     }
   }, [employee]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const addJobReference = () => setFormData(prev => ({ ...prev, jobReferences: [...prev.jobReferences, emptyJobReference()] }));
-  const removeJobReference = (index: number) => setFormData(prev => ({ ...prev, jobReferences: prev.jobReferences.filter((_, i) => i !== index) }));
-  const updateJobReference = (index: number, field: keyof JobReferenceForm, value: any) => {
+  const addJobReference = () =>
+    setFormData(prev => ({
+      ...prev,
+      jobReferences: [...prev.jobReferences, emptyJobReference()],
+    }));
+
+  const removeJobReference = (index: number) =>
+    setFormData(prev => ({
+      ...prev,
+      jobReferences: prev.jobReferences.filter((_, i) => i !== index),
+    }));
+
+  const updateJobReference = (
+    index: number,
+    field: keyof JobReferenceForm,
+    value: any
+  ) => {
     const updated = [...formData.jobReferences];
     updated[index] = { ...updated[index], [field]: value };
     setFormData(prev => ({ ...prev, jobReferences: updated }));
   };
 
-  const addEducation = () => setFormData(prev => ({ ...prev, educations: [...prev.educations, emptyEducation()] }));
-  const removeEducation = (index: number) => setFormData(prev => ({ ...prev, educations: prev.educations.filter((_, i) => i !== index) }));
-  const updateEducation = (index: number, field: keyof EducationForm, value: any) => {
+  const addEducation = () =>
+    setFormData(prev => ({
+      ...prev,
+      educations: [...prev.educations, emptyEducation()],
+    }));
+
+  const removeEducation = (index: number) =>
+    setFormData(prev => ({
+      ...prev,
+      educations: prev.educations.filter((_, i) => i !== index),
+    }));
+
+  const updateEducation = (
+    index: number,
+    field: keyof EducationForm,
+    value: any
+  ) => {
     const updated = [...formData.educations];
     updated[index] = { ...updated[index], [field]: value };
     setFormData(prev => ({ ...prev, educations: updated }));
@@ -88,15 +124,67 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
   const handleSubmit = async () => {
     setSaving(true);
     try {
+      // ✅ FIX 1: beri type
+      const payload: EmployeeFormDto = {
+        fullName: formData.fullName,
+        employeeNumber: formData.employeeNumber,
+        identityNumber: formData.identityNumber,
+        gender: formData.gender,
+        religion: formData.religion,
+        bloodType: formData.bloodType,
+        placeOfBirth: formData.placeOfBirth,
+        dateOfBirth: formData.dateOfBirth,
+
+        email: formData.email,
+        phoneNumber: formData.phoneNumber,
+        province: formData.province,
+        city: formData.city,
+        district: formData.district,
+        fullAddress: formData.fullAddress,
+
+        heightCm: formData.heightCm ? Number(formData.heightCm) : undefined,
+        weightKg: formData.weightKg ? Number(formData.weightKg) : undefined,
+        familyMemberCount: formData.familyMemberCount
+          ? Number(formData.familyMemberCount)
+          : undefined,
+        active: Boolean(formData.active),
+
+        emergencyContactName: formData.emergencyContactName,
+        emergencyContactPhone: formData.emergencyContactPhone,
+
+        jobReferences: formData.jobReferences
+          .filter(j => j.jobReferenceId)
+          .map(j => {
+            const ref = jobReferenceOptions.find(
+              o => o.id === j.jobReferenceId
+            );
+
+            return {
+              ...j,
+              name: ref?.name || '',
+              experienceYears: Number(j.experienceYears),
+            };
+          }),
+
+        educations: formData.educations.map(e => ({
+          ...e,
+          startYear: Number(e.startYear),
+          endYear:
+            typeof e.endYear === 'number'
+              ? e.endYear
+              : undefined,
+        })),
+      }; // ✅ FIX 2: tutup payload
+
       if (employee?.id) {
-        await employeeService.update(employee.id, formData);
+        await employeeService.update(employee.id, payload);
       } else {
-        const { id, ...payload } = formData;
         await employeeService.create(payload);
       }
+
       onSave();
     } catch (err) {
-      console.error(err);
+      console.error('SAVE ERROR:', err);
       alert('Failed to save data');
     } finally {
       setSaving(false);
@@ -105,9 +193,12 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 
   const steps = [
     { number: 1, title: 'Personal Info', icon: <User size={18} /> },
-    { number: 2, title: 'Job References', icon: <Briefcase size={18} /> },
-    { number: 3, title: 'Education', icon: <GraduationCap size={18} /> },
-    { number: 4, title: 'Summary', icon: <FileCheck size={18} /> },
+    { number: 2, title: 'Contact & Address', icon: <MapPin size={18} /> },
+    { number: 3, title: 'Physical & Family', icon: <Users size={18} /> },
+    { number: 4, title: 'Emergency Contact', icon: <PhoneCall size={18} /> },
+    { number: 5, title: 'Job References', icon: <Briefcase size={18} /> },
+    { number: 6, title: 'Education', icon: <GraduationCap size={18} /> },
+    { number: 7, title: 'Summary', icon: <FileCheck size={18} /> },
   ];
 
   if (!isOpen) return null;
@@ -153,14 +244,18 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
           </div>
 
           {/* CONTENT AREA */}
-          <div className="flex-1 p-8 overflow-y-auto bg-white">
+          <div className="flex-1 p-8 overflow-y-auto bg-white">            
             
             {/* STEP 1: PERSONAL INFO */}
-            {currentStep === 1 && (
-              <div className="animate-fade-in space-y-6">
-                <h3 className="text-xl font-semibold text-gray-900 border-b pb-4">Personal Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
+              {currentStep === 1 && (
+                <div className="animate-fade-in space-y-6">
+                  <h3 className="text-xl font-semibold text-gray-900 border-b pb-4">
+                    Personal Information
+                  </h3>
+
+                  {/* Full Name */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
                     <input
                       name="fullName"
@@ -170,6 +265,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
                       placeholder="e.g. John Doe"
                     />
                   </div>
+                  {/* Employee Number */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Employee Number</label>
                     <input
@@ -180,6 +276,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
                       placeholder="e.g. EMP-2024-001"
                     />
                   </div>
+                  {/* Gender */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
                     <select
@@ -192,12 +289,292 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
                       <option value="FEMALE">Female</option>
                     </select>
                   </div>
+                    {/* Identity Number */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Identity Number
+                      </label>
+                      <input
+                        name="identityNumber"
+                        value={formData.identityNumber || ''}
+                        onChange={handleChange}
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ff6908]/20 focus:border-[#ff6908] transition-all"
+                        placeholder="e.g. 3201xxxxxxxxxxxx"
+                      />
+                    </div>
+
+                    {/* Place of Birth */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Place of Birth
+                      </label>
+                      <input
+                        name="placeOfBirth"
+                        value={formData.placeOfBirth || ''}
+                        onChange={handleChange}
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ff6908]/20 focus:border-[#ff6908] transition-all"
+                        placeholder="e.g. Jakarta"
+                      />
+                    </div>
+
+                    {/* Date of Birth */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Date of Birth
+                      </label>
+                      <input
+                        type="date"
+                        name="dateOfBirth"
+                        value={formData.dateOfBirth || ''}
+                        onChange={handleChange}
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ff6908]/20 focus:border-[#ff6908] transition-all"
+                      />
+                    </div>
+
+                    {/* Religion */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Religion
+                      </label>
+                      <input
+                        name="religion"
+                        value={formData.religion || ''}
+                        onChange={handleChange}
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ff6908]/20 focus:border-[#ff6908] transition-all"
+                        placeholder="e.g. Islam"
+                      />
+                    </div>
+
+                    {/* Blood Type */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Blood Type
+                      </label>
+                      <input
+                        name="bloodType"
+                        value={formData.bloodType || ''}
+                        onChange={handleChange}
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ff6908]/20 focus:border-[#ff6908] transition-all"
+                        placeholder="e.g. O"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+            {/* STEP 2: CONTACT & ADDRESS */}
+            {currentStep === 2 && (
+              <div className="animate-fade-in space-y-6">
+                <h3 className="text-xl font-semibold text-gray-900 border-b pb-4">
+                  Contact & Address
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Email */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Email
+                    </label>
+                    <input
+                      name="email"
+                      value={formData.email || ''}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ff6908]/20 focus:border-[#ff6908] transition-all"
+                      placeholder="e.g. john.doe@email.com"
+                    />
+                  </div>
+
+                  {/* Phone Number */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Phone Number
+                    </label>
+                    <input
+                      name="phoneNumber"
+                      value={formData.phoneNumber || ''}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ff6908]/20 focus:border-[#ff6908] transition-all"
+                      placeholder="e.g. 081234567890"
+                    />
+                  </div>
+
+                  {/* Province */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Province
+                    </label>
+                    <input
+                      name="province"
+                      value={formData.province || ''}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ff6908]/20 focus:border-[#ff6908] transition-all"
+                      placeholder="e.g. DKI Jakarta"
+                    />
+                  </div>
+
+                  {/* City */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      City
+                    </label>
+                    <input
+                      name="city"
+                      value={formData.city || ''}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ff6908]/20 focus:border-[#ff6908] transition-all"
+                    />
+                  </div>
+
+                  {/* District */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      District
+                    </label>
+                    <input
+                      name="district"
+                      value={formData.district || ''}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ff6908]/20 focus:border-[#ff6908] transition-all"
+                    />
+                  </div>
+
+                  {/* Full Address */}
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Full Address
+                    </label>
+                    <textarea
+                      name="fullAddress"
+                      value={formData.fullAddress || ''}
+                      onChange={handleChange}
+                      rows={3}
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ff6908]/20 focus:border-[#ff6908] transition-all resize-none"
+                    />
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* STEP 2: JOB REFERENCES */}
-            {currentStep === 2 && (
+            {/* STEP 3: PHYSICAL & FAMILY */}
+            {currentStep === 3 && (
+              <div className="animate-fade-in space-y-6">
+                <h3 className="text-xl font-semibold text-gray-900 border-b pb-4">
+                  Physical & Family Information
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Height */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Height (cm)
+                    </label>
+                    <input
+                      type="number"
+                      name="heightCm"
+                      value={formData.heightCm ?? ''}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ff6908]/20 focus:border-[#ff6908] transition-all"
+                      placeholder="e.g. 170"
+                    />
+                  </div>
+
+                  {/* Weight */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Weight (kg)
+                    </label>
+                    <input
+                      type="number"
+                      name="weightKg"
+                      value={formData.weightKg ?? ''}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ff6908]/20 focus:border-[#ff6908] transition-all"
+                      placeholder="e.g. 65"
+                    />
+                  </div>
+
+                  {/* Family Member Count */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Family Member Count
+                    </label>
+                    <input
+                      type="number"
+                      name="familyMemberCount"
+                      value={formData.familyMemberCount ?? ''}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ff6908]/20 focus:border-[#ff6908] transition-all"
+                      placeholder="e.g. 4"
+                    />
+                  </div>
+
+                  {/* Active Status */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Employment Status
+                    </label>
+                    <select
+                      name="active"
+                      value={formData.active ? 'true' : 'false'}
+                      onChange={(e) =>
+                        handleChange({
+                          target: {
+                            name: 'active',
+                            value: e.target.value === 'true',
+                          },
+                        } as any)
+                      }
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ff6908]/20 focus:border-[#ff6908] bg-white transition-all"
+                    >
+                      <option value="true">Active</option>
+                      <option value="false">Inactive</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 4: EMERGENCY CONTACT */}
+            {currentStep === 4 && (
+              <div className="animate-fade-in space-y-6">
+                <h3 className="text-xl font-semibold text-gray-900 border-b pb-4">
+                  Emergency Contact
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Emergency Contact Name */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Emergency Contact Name
+                    </label>
+                    <input
+                      name="emergencyContactName"
+                      value={formData.emergencyContactName || ''}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ff6908]/20 focus:border-[#ff6908] transition-all"
+                      placeholder="e.g. Jane Doe"
+                    />
+                  </div>
+
+                  {/* Emergency Contact Phone */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Emergency Contact Phone
+                    </label>
+                    <input
+                      name="emergencyContactPhone"
+                      value={formData.emergencyContactPhone || ''}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ff6908]/20 focus:border-[#ff6908] transition-all"
+                      placeholder="e.g. 081234567890"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 5: JOB REFERENCES */}
+            {currentStep === 5 && (
               <div className="animate-fade-in space-y-6">
                 <div className="flex justify-between items-center border-b pb-4">
                   <h3 className="text-xl font-semibold text-gray-900">Job Experiences</h3>
@@ -225,7 +602,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pr-8">
                         <div>
                           <label className="text-xs font-semibold text-gray-500 uppercase">Position</label>
-                          <select
+                          {/* <select
                             className="mt-1 block w-full rounded-md border-gray-300 bg-white py-2 px-3 shadow-sm focus:border-[#ff6908] focus:ring-[#ff6908] sm:text-sm"
                             value={jr.jobReferenceId}
                             onChange={e => updateJobReference(i, 'jobReferenceId', e.target.value)}
@@ -234,7 +611,22 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
                             {jobReferenceOptions.map(opt => (
                               <option key={opt.id} value={opt.id}>{opt.name}</option>
                             ))}
+                          </select> */}
+                          <select
+                            className="mt-1 block w-full rounded-md border-gray-300 bg-white py-2 px-3 shadow-sm"
+                            value={jr.jobReferenceId}
+                            onChange={e =>
+                              updateJobReference(i, 'jobReferenceId', e.target.value)
+                            }
+                          >
+                            <option value="">Select Job Reference</option>
+                            {jobReferenceOptions.map(opt => (
+                              <option key={opt.id} value={opt.id}>
+                                {opt.name}
+                              </option>
+                            ))}
                           </select>
+
                         </div>
                         <div>
                           <label className="text-xs font-semibold text-gray-500 uppercase">Years of Exp</label>
@@ -253,8 +645,8 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
               </div>
             )}
 
-            {/* STEP 3: EDUCATION */}
-            {currentStep === 3 && (
+            {/* STEP 6: EDUCATION */}
+            {currentStep === 6 && (
               <div className="animate-fade-in space-y-6">
                 <div className="flex justify-between items-center border-b pb-4">
                   <h3 className="text-xl font-semibold text-gray-900">Education History</h3>
@@ -299,60 +691,209 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
               </div>
             )}
 
-            {/* STEP 4: SUMMARY */}
-            {currentStep === 4 && (
-              <div className="animate-fade-in space-y-6">
-                <h3 className="text-xl font-semibold text-gray-900 mb-6">Review & Submit</h3>
-                
-                <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
-                  <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4">Basic Info</h4>
-                  <div className="grid grid-cols-2 gap-y-4 text-sm">
+            {/* STEP 7: SUMMARY */}
+            {currentStep === 7 && (
+              <div className="animate-fade-in space-y-8">
+                <h3 className="text-xl font-semibold text-gray-900">
+                  Review & Submit
+                </h3>
+
+                {/* STEP 1: PERSONAL INFO */}
+                <div className="bg-gray-50 p-6 rounded-xl border border-gray-200 space-y-4">
+                  <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider">
+                    Personal Information
+                  </h4>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 text-sm">
                     <div>
                       <span className="text-gray-500 block">Full Name</span>
-                      <span className="font-medium">{formData.fullName || '-'}</span>
+                      <span className="font-medium">{formData.fullName || '—'}</span>
                     </div>
                     <div>
-                      <span className="text-gray-500 block">Employee No</span>
-                      <span className="font-medium">{formData.employeeNumber || '-'}</span>
+                      <span className="text-gray-500 block">Employee Number</span>
+                      <span className="font-medium">{formData.employeeNumber || '—'}</span>
                     </div>
                     <div>
                       <span className="text-gray-500 block">Gender</span>
-                      <span className="font-medium">{formData.gender}</span>
+                      <span className="font-medium">{formData.gender || '—'}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 block">Identity Number</span>
+                      <span className="font-medium">{formData.identityNumber || '—'}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 block">Place of Birth</span>
+                      <span className="font-medium">{formData.placeOfBirth || '—'}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 block">Date of Birth</span>
+                      <span className="font-medium">{formData.dateOfBirth || '—'}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 block">Religion</span>
+                      <span className="font-medium">{formData.religion || '—'}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 block">Blood Type</span>
+                      <span className="font-medium">{formData.bloodType || '—'}</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
-                    <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4 flex items-center gap-2">
-                       References <span className="bg-gray-200 text-gray-700 text-xs px-2 py-0.5 rounded-full">{formData.jobReferences.length}</span>
-                    </h4>
-                    <ul className="space-y-2 text-sm text-gray-600">
-                      {formData.jobReferences.map((j, k) => (
-                        <li key={k} className="flex justify-between border-b border-gray-200 last:border-0 pb-2 last:pb-0">
-                           <span>{jobReferenceOptions.find(o => o.id === j.jobReferenceId)?.name || 'Unknown Job'}</span>
-                           <span className="font-medium">{j.experienceYears} Years</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                {/* STEP 2: CONTACT & ADDRESS */}
+                <div className="bg-gray-50 p-6 rounded-xl border border-gray-200 space-y-4">
+                  <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider">
+                    Contact & Address
+                  </h4>
 
-                  <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
-                    <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4 flex items-center gap-2">
-                       Education <span className="bg-gray-200 text-gray-700 text-xs px-2 py-0.5 rounded-full">{formData.educations.length}</span>
-                    </h4>
-                    <ul className="space-y-2 text-sm text-gray-600">
-                      {formData.educations.map((e, k) => (
-                        <li key={k} className="border-b border-gray-200 last:border-0 pb-2 last:pb-0">
-                           <div className="font-medium">{e.schoolName}</div>
-                           <div className="text-xs text-gray-500">{e.level} • {e.startYear}</div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 text-sm">
+                    <div>
+                      <span className="text-gray-500 block">Email</span>
+                      <span className="font-medium">{formData.email || '—'}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 block">Phone Number</span>
+                      <span className="font-medium">{formData.phoneNumber || '—'}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 block">Province</span>
+                      <span className="font-medium">{formData.province || '—'}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 block">City</span>
+                      <span className="font-medium">{formData.city || '—'}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 block">District</span>
+                      <span className="font-medium">{formData.district || '—'}</span>
+                    </div>
+                    <div className="md:col-span-2">
+                      <span className="text-gray-500 block">Full Address</span>
+                      <span className="font-medium">{formData.fullAddress || '—'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* STEP 3: PHYSICAL & FAMILY */}
+                <div className="bg-gray-50 p-6 rounded-xl border border-gray-200 space-y-4">
+                  <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider">
+                    Physical & Family
+                  </h4>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-y-4 text-sm">
+                    <div>
+                      <span className="text-gray-500 block">Height</span>
+                      <span className="font-medium">
+                        {formData.heightCm ? `${formData.heightCm} cm` : '—'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 block">Weight</span>
+                      <span className="font-medium">
+                        {formData.weightKg ? `${formData.weightKg} kg` : '—'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 block">Family Members</span>
+                      <span className="font-medium">
+                        {formData.familyMemberCount ?? '—'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 block">Status</span>
+                      <span className="font-medium">
+                        {formData.active ? 'Active' : 'Inactive'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* STEP 4: EMERGENCY CONTACT */}
+                <div className="bg-gray-50 p-6 rounded-xl border border-gray-200 space-y-4">
+                  <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider">
+                    Emergency Contact
+                  </h4>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 text-sm">
+                    <div>
+                      <span className="text-gray-500 block">Name</span>
+                      <span className="font-medium">
+                        {formData.emergencyContactName || '—'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 block">Phone</span>
+                      <span className="font-medium">
+                        {formData.emergencyContactPhone || '—'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* STEP 5: JOB REFERENCES */}
+                <div className="bg-gray-50 p-6 rounded-xl border border-gray-200 space-y-4">
+                  <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
+                    Job References
+                    <span className="bg-gray-200 text-gray-700 text-xs px-2 py-0.5 rounded-full">
+                      {formData.jobReferences.length}
+                    </span>
+                  </h4>
+
+                  {formData.jobReferences.length === 0 ? (
+                    <p className="text-sm text-gray-500">No job references added.</p>
+                  ) : (
+                    <ul className="space-y-2 text-sm">
+                      {formData.jobReferences.map((j, i) => {
+                        const ref = jobReferenceOptions.find(
+                          o => o.id === j.jobReferenceId
+                        );
+
+                        return (
+                          <li
+                            key={i}
+                            className="flex justify-between border-b border-gray-200 last:border-0 pb-2 last:pb-0"
+                          >
+                            <span>{ref?.name || '—'}</span>
+                            <span className="font-medium">
+                              {j.experienceYears} yrs • {j.skillLevel}
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
+
+                {/* STEP 6: EDUCATION */}
+                <div className="bg-gray-50 p-6 rounded-xl border border-gray-200 space-y-4">
+                  <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
+                    Education
+                    <span className="bg-gray-200 text-gray-700 text-xs px-2 py-0.5 rounded-full">
+                      {formData.educations.length}
+                    </span>
+                  </h4>
+
+                  {formData.educations.length === 0 ? (
+                    <p className="text-sm text-gray-500">No education data.</p>
+                  ) : (
+                    <ul className="space-y-2 text-sm">
+                      {formData.educations.map((e, i) => (
+                        <li
+                          key={i}
+                          className="border-b border-gray-200 last:border-0 pb-2 last:pb-0"
+                        >
+                          <div className="font-medium">{e.schoolName}</div>
+                          <div className="text-xs text-gray-500">
+                            {e.level} • {e.startYear}
+                          </div>
                         </li>
                       ))}
                     </ul>
-                  </div>
+                  )}
                 </div>
               </div>
             )}
+
           </div>
         </div>
 
@@ -367,7 +908,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
             </button>
           )}
 
-          {currentStep < 4 ? (
+          {currentStep < 7 ? (
             <button
               onClick={() => setCurrentStep(s => s + 1)}
               className="px-5 py-2 rounded-lg text-sm font-medium text-white bg-[#ff6908] hover:bg-[#e65e07] shadow-sm hover:shadow transition-all flex items-center gap-2"
