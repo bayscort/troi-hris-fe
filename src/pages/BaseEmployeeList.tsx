@@ -53,6 +53,8 @@ const exportEmployeesToExcel = (employees: Employee[]) => {
       'Province': emp.province,
       'City': emp.city,
       'Gender': emp.gender,
+      'Place of Birth': emp.placeOfBirth ?? '',
+      'Date of Birth': emp.dateOfBirth ?? '',
       'Status': emp.active ? 'Active' : 'Inactive',
       'Job References': jobRefs ?? '',
     };
@@ -96,7 +98,7 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
   const [search, setSearch] = useState('');
 
   type FilterOperator = 'eq' | 'gte' | 'lte' | 'contains';
-  type LogicalOperator = 'AND' | 'OR';
+  // type LogicalOperator = 'AND' | 'OR'; // Removed
 
   type FilterField =
     | 'fullName'
@@ -159,7 +161,7 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
       label: 'Experience (Years)',
       operators: ['gte', 'lte'],
       valueType: 'number',
-      unit: 'years',     
+      unit: 'years',
     },
   ];
 
@@ -168,9 +170,9 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
     field?: FilterField;
     operator?: FilterOperator;
     value?: string;
-    logic?: LogicalOperator; // AND / OR (hubungan ke row berikutnya)
+    // logic?: LogicalOperator; // Removed
   }
-  
+
   const [filters, setFilters] = useState<FilterRow[]>([
     { id: crypto.randomUUID() },
   ]);
@@ -200,7 +202,6 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
       ...prev,
       {
         id: crypto.randomUUID(),
-        logic: 'AND',
       },
     ]);
   };
@@ -215,26 +216,13 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
     if (filters.length === 0) return data;
 
     return data.filter((emp) => {
-      let result = true;
+      // Logic: ALL filters must match (AND)
+      return filters.every(filter => {
+        // If filter is incomplete, we treat it as "pass" (ignoring it)
+        if (!filter.field || !filter.operator || !filter.value) return true;
 
-      filters.forEach((filter, index) => {
-        if (!filter.field || !filter.operator || !filter.value) return;
-
-        const current = evaluateFilter(emp, filter);
-
-        if (index === 0) {
-          result = current;
-        } else {
-          if (filters[index - 1].logic === 'AND') {
-            result = result && current;
-          }
-          if (filters[index - 1].logic === 'OR') {
-            result = result || current;
-          }
-        }
+        return evaluateFilter(emp, filter);
       });
-
-      return result;
     });
   };
 
@@ -263,17 +251,17 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
 
       case 'experienceYears':
         return emp.jobReferences?.some(jr => {
-            const exp = jr.experienceYears;
-            const val = Number(value);
+          const exp = jr.experienceYears;
+          const val = Number(value);
 
-            switch (operator) {
+          switch (operator) {
             case 'gte':
-                return exp >= val;
+              return exp >= val;
             case 'lte':
-                return exp <= val;
+              return exp <= val;
             default:
-                return false;
-            }
+              return false;
+          }
         }) ?? false;
 
 
@@ -335,40 +323,40 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
   const fetchData = async () => {
     setLoading(true);
     try {
-        const res = await employeeService.search({
+      const res = await employeeService.search({
         category,
         page,
         size: 10,
-        });
+      });
 
-        setRawEmployees(res.content); // ⬅️ SIMPAN DATA ASLI
+      setRawEmployees(res.content); // ⬅️ SIMPAN DATA ASLI
     } catch (error) {
-        console.error('Failed to fetch employees', error);
+      console.error('Failed to fetch employees', error);
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
-    };
+  };
 
   useEffect(() => {
-      let data = [...rawEmployees];
-      // SEARCH
-      if (search) {
-          data = data.filter(e =>
-          e.fullName.toLowerCase().includes(search.toLowerCase()) ||
-          e.employeeNumber.toLowerCase().includes(search.toLowerCase())
-          );
-          }
+    let data = [...rawEmployees];
+    // SEARCH
+    if (search) {
+      data = data.filter(e =>
+        e.fullName.toLowerCase().includes(search.toLowerCase()) ||
+        e.employeeNumber.toLowerCase().includes(search.toLowerCase())
+      );
+    }
 
-      // FILTER
-      data = applyFilters(data);
+    // FILTER
+    data = applyFilters(data);
 
-      // SORT
-      data = applySort(data);
+    // SORT
+    data = applySort(data);
 
-      setEmployees(data);
+    setEmployees(data);
 
-      }, [rawEmployees, search, filters]
-    );
+  }, [rawEmployees, search, filters, sort]
+  );
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -386,13 +374,13 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-        if (
-          sortRef.current &&
-          !sortRef.current.contains(e.target as Node)
-        ) {
-          setSortOpen(false);
-        }
-      };
+      if (
+        sortRef.current &&
+        !sortRef.current.contains(e.target as Node)
+      ) {
+        setSortOpen(false);
+      }
+    };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -402,7 +390,7 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
   useEffect(() => {
     fetchData();
   }, [category, page]);
- 
+
   const handleDelete = async (id: string) => {
     if (
       !window.confirm(
@@ -449,7 +437,7 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
 
     try {
       for (const emp of employeesToImport) {
-      await employeeService.create(emp);
+        await employeeService.create(emp);
       }
       fetchData();
       alert('Import Excel berhasil');
@@ -500,7 +488,7 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
               <button
                 onClick={() => setFilterOpen(prev => !prev)}
                 className="flex items-center gap-1.5 px-3 py-2 border rounded-md text-sm hover:bg-gray-50"
-                >
+              >
                 <SlidersHorizontal size={16} />
                 Filter
               </button>
@@ -616,22 +604,6 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
                               )
                             )}
 
-                            {/* LOGIC (AND / OR) */}
-                            {idx < filters.length - 1 && (
-                              <select
-                                value={f.logic ?? 'AND'}
-                                onChange={(e) =>
-                                  updateFilter(f.id, {
-                                    logic: e.target.value as LogicalOperator,
-                                  })
-                                }
-                                className="text-sm border rounded-md px-2 py-1.5"
-                              >
-                                <option value="AND">AND</option>
-                                <option value="OR">OR</option>
-                              </select>
-                            )}
-
                             {/* REMOVE */}
                             {filters.length > 1 && (
                               <button
@@ -678,7 +650,10 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
                         setSort({ key: 'fullName', direction: 'asc' });
                         setSortOpen(false);
                       }}
-                      className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded"
+                      className={`block w-full text-left px-3 py-2 text-sm rounded
+                        ${sort?.key === 'fullName' && sort.direction === 'asc'
+                          ? 'bg-orange-100 text-orange-700'
+                          : 'hover:bg-gray-100'}`}
                     >
                       Name A–Z
                     </button>
@@ -688,7 +663,10 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
                         setSort({ key: 'fullName', direction: 'desc' });
                         setSortOpen(false);
                       }}
-                      className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded"
+                      className={`block w-full text-left px-3 py-2 text-sm rounded
+                        ${sort?.key === 'fullName' && sort.direction === 'desc'
+                          ? 'bg-orange-100 text-orange-700'
+                          : 'hover:bg-gray-100'}`}
                     >
                       Name Z–A
                     </button>
@@ -698,7 +676,10 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
                         setSort({ key: 'experienceYears', direction: 'asc' });
                         setSortOpen(false);
                       }}
-                      className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded"
+                      className={`block w-full text-left px-3 py-2 text-sm rounded
+                        ${sort?.key === 'experienceYears' && sort.direction === 'asc'
+                          ? 'bg-orange-100 text-orange-700'
+                          : 'hover:bg-gray-100'}`}
                     >
                       Experience ↑
                     </button>
@@ -708,7 +689,10 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
                         setSort({ key: 'experienceYears', direction: 'desc' });
                         setSortOpen(false);
                       }}
-                      className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded"
+                      className={`block w-full text-left px-3 py-2 text-sm rounded
+                        ${sort?.key === 'experienceYears' && sort.direction === 'desc'
+                          ? 'bg-orange-100 text-orange-700'
+                          : 'hover:bg-gray-100'}`}
                     >
                       Experience ↓
                     </button>
@@ -835,8 +819,8 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
                             {emp.fullName.charAt(0)}
                           </div>
                           <div>
-                            <p 
-                            className="text-sm font-medium text-gray-900">
+                            <p
+                              className="text-sm font-medium text-gray-900">
                               {emp.fullName}
                             </p>
                             <p className="text-xs text-gray-500">{emp.employeeNumber}</p>
@@ -867,35 +851,35 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
                           </p>
                         </div>
                       </td>
-                     
+
                       {/* JOB REFERENCE (SHOW ALL) */}
-                        <td className="text-sm font-medium text-gray-900">
+                      <td className="text-sm font-medium text-gray-900">
                         {emp.jobReferences && emp.jobReferences.length > 0 ? (
-                            <div className="space-y-2">
+                          <div className="space-y-2">
                             {emp.jobReferences.map((jr, idx) => (
-                                <div key={idx} className="flex items-center gap-2">
+                              <div key={idx} className="flex items-center gap-2">
                                 {/* <span className="font-medium">
                                     {jr.name || '-'}
                                 </span> */}
 
                                 {jr.primaryReference && (
-                                    <span className="text-[10px] bg-orange-100 text-orange-700 px-1.5 rounded">
+                                  <span className="text-[10px] bg-orange-100 text-orange-700 px-1.5 rounded">
                                     Primary
-                                    </span>
+                                  </span>
                                 )}
 
                                 <span className="text-xs text-gray-400">
-                                    • {jr.experienceYears} yr
+                                  • {jr.experienceYears} yr
                                 </span>
-                                </div>
-                            ))}                            
-                            </div>
+                              </div>
+                            ))}
+                          </div>
                         ) : (
-                            <span className="italic text-gray-400">
+                          <span className="italic text-gray-400">
                             No job reference
-                            </span>
+                          </span>
                         )}
-                        </td>
+                      </td>
 
 
                       {/* STATUS */}

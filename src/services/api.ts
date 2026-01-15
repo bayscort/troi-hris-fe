@@ -420,7 +420,7 @@ export const employeeService = {
   },
 
   delete(id: string) {
-    return api.delete(`/api/employees/${id}`);
+    return api.delete(`/employees/${id}`);
   },
 
   getActiveBySite: async (siteId: string, jobPositionId?: string) => {
