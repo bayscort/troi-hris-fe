@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 
-import { 
+import {
   X, ArrowLeft, ArrowRight, Save, Loader, Plus, Trash,
-  User, MapPin, PhoneCall, Users, Briefcase, GraduationCap, FileCheck 
+  User, MapPin, PhoneCall, Users, Briefcase, GraduationCap, FileCheck
 } from 'lucide-react';
 
 import { employeeService, jobReferenceService } from '../../services/api';
@@ -38,7 +38,6 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [saving, setSaving] = useState(false);
-  const [loadingRefs, setLoadingRefs] = useState(false);
 
   const [jobReferenceOptions, setJobReferenceOptions] = useState<any[]>([]);
 
@@ -53,14 +52,11 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 
   useEffect(() => {
     const init = async () => {
-      setLoadingRefs(true);
       try {
         const refs = await jobReferenceService.getAll();
         setJobReferenceOptions(refs);
       } catch (e) {
         console.error('Failed to load references', e);
-      } finally {
-        setLoadingRefs(false);
       }
     };
     init();
@@ -206,7 +202,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity duration-300">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl h-[85vh] flex flex-col overflow-hidden font-sans">
-        
+
         {/* HEADER */}
         <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gradient-to-b from-gray-50 to-white">
           <h2 className="text-2xl font-semibold text-gray-900 tracking-tight">
@@ -222,15 +218,14 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
           <div className="w-64 bg-gray-50 p-6 border-r border-gray-200 hidden md:block">
             <div className="space-y-4">
               {steps.map((s) => (
-                <div 
-                  key={s.number} 
-                  className={`flex items-center gap-3 p-2 rounded-lg transition-all duration-200 ${
-                    currentStep === s.number ? 'bg-white shadow-sm ring-1 ring-gray-200' : ''
-                  }`}
+                <div
+                  key={s.number}
+                  className={`flex items-center gap-3 p-2 rounded-lg transition-all duration-200 ${currentStep === s.number ? 'bg-white shadow-sm ring-1 ring-gray-200' : ''
+                    }`}
                 >
                   <div className={`
                     w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors
-                    ${currentStep === s.number ? 'bg-[#ff6908] text-white' : 
+                    ${currentStep === s.number ? 'bg-[#ff6908] text-white' :
                       currentStep > s.number ? 'bg-orange-100 text-[#ff6908]' : 'bg-gray-200 text-gray-500'}
                   `}>
                     {currentStep > s.number ? '✓' : s.number}
@@ -244,18 +239,18 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
           </div>
 
           {/* CONTENT AREA */}
-          <div className="flex-1 p-8 overflow-y-auto bg-white">            
-            
-            {/* STEP 1: PERSONAL INFO */}
-              {currentStep === 1 && (
-                <div className="animate-fade-in space-y-6">
-                  <h3 className="text-xl font-semibold text-gray-900 border-b pb-4">
-                    Personal Information
-                  </h3>
+          <div className="flex-1 p-8 overflow-y-auto bg-white">
 
-                  {/* Full Name */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
+            {/* STEP 1: PERSONAL INFO */}
+            {currentStep === 1 && (
+              <div className="animate-fade-in space-y-6">
+                <h3 className="text-xl font-semibold text-gray-900 border-b pb-4">
+                  Personal Information
+                </h3>
+
+                {/* Full Name */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
                     <input
                       name="fullName"
@@ -289,78 +284,78 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
                       <option value="FEMALE">Female</option>
                     </select>
                   </div>
-                    {/* Identity Number */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Identity Number
-                      </label>
-                      <input
-                        name="identityNumber"
-                        value={formData.identityNumber || ''}
-                        onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ff6908]/20 focus:border-[#ff6908] transition-all"
-                        placeholder="e.g. 3201xxxxxxxxxxxx"
-                      />
-                    </div>
+                  {/* Identity Number */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Identity Number
+                    </label>
+                    <input
+                      name="identityNumber"
+                      value={formData.identityNumber || ''}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ff6908]/20 focus:border-[#ff6908] transition-all"
+                      placeholder="e.g. 3201xxxxxxxxxxxx"
+                    />
+                  </div>
 
-                    {/* Place of Birth */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Place of Birth
-                      </label>
-                      <input
-                        name="placeOfBirth"
-                        value={formData.placeOfBirth || ''}
-                        onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ff6908]/20 focus:border-[#ff6908] transition-all"
-                        placeholder="e.g. Jakarta"
-                      />
-                    </div>
+                  {/* Place of Birth */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Place of Birth
+                    </label>
+                    <input
+                      name="placeOfBirth"
+                      value={formData.placeOfBirth || ''}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ff6908]/20 focus:border-[#ff6908] transition-all"
+                      placeholder="e.g. Jakarta"
+                    />
+                  </div>
 
-                    {/* Date of Birth */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Date of Birth
-                      </label>
-                      <input
-                        type="date"
-                        name="dateOfBirth"
-                        value={formData.dateOfBirth || ''}
-                        onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ff6908]/20 focus:border-[#ff6908] transition-all"
-                      />
-                    </div>
+                  {/* Date of Birth */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Date of Birth
+                    </label>
+                    <input
+                      type="date"
+                      name="dateOfBirth"
+                      value={formData.dateOfBirth || ''}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ff6908]/20 focus:border-[#ff6908] transition-all"
+                    />
+                  </div>
 
-                    {/* Religion */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Religion
-                      </label>
-                      <input
-                        name="religion"
-                        value={formData.religion || ''}
-                        onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ff6908]/20 focus:border-[#ff6908] transition-all"
-                        placeholder="e.g. Islam"
-                      />
-                    </div>
+                  {/* Religion */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Religion
+                    </label>
+                    <input
+                      name="religion"
+                      value={formData.religion || ''}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ff6908]/20 focus:border-[#ff6908] transition-all"
+                      placeholder="e.g. Islam"
+                    />
+                  </div>
 
-                    {/* Blood Type */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Blood Type
-                      </label>
-                      <input
-                        name="bloodType"
-                        value={formData.bloodType || ''}
-                        onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ff6908]/20 focus:border-[#ff6908] transition-all"
-                        placeholder="e.g. O"
-                      />
-                    </div>
+                  {/* Blood Type */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Blood Type
+                    </label>
+                    <input
+                      name="bloodType"
+                      value={formData.bloodType || ''}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ff6908]/20 focus:border-[#ff6908] transition-all"
+                      placeholder="e.g. O"
+                    />
                   </div>
                 </div>
-              )}
+              </div>
+            )}
 
             {/* STEP 2: CONTACT & ADDRESS */}
             {currentStep === 2 && (
@@ -582,23 +577,23 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
                     <Plus size={16} /> Add Position
                   </button>
                 </div>
-                
+
                 {formData.jobReferences.length === 0 && (
-                   <div className="text-center py-10 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-                      <p className="text-gray-500">No job references added yet.</p>
-                   </div>
+                  <div className="text-center py-10 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                    <p className="text-gray-500">No job references added yet.</p>
+                  </div>
                 )}
 
                 <div className="grid gap-4">
                   {formData.jobReferences.map((jr, i) => (
                     <div key={i} className="bg-gray-50 p-5 rounded-xl border border-gray-200 relative group hover:border-orange-200 transition-colors">
-                      <button 
+                      <button
                         onClick={() => removeJobReference(i)}
                         className="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition-colors"
                       >
                         <Trash size={18} />
                       </button>
-                      
+
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pr-8">
                         <div>
                           <label className="text-xs font-semibold text-gray-500 uppercase">Position</label>
@@ -660,15 +655,15 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
                     <div key={i} className="flex gap-4 items-start bg-gray-50 p-4 rounded-lg border border-gray-200">
                       <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="md:col-span-2">
-                          <input 
-                             placeholder="School / University Name"
-                             className="w-full bg-white px-3 py-2 rounded border border-gray-300 focus:border-[#ff6908] focus:ring-1 focus:ring-[#ff6908] outline-none"
-                             value={edu.schoolName}
-                             onChange={e => updateEducation(i, 'schoolName', e.target.value)}
+                          <input
+                            placeholder="School / University Name"
+                            className="w-full bg-white px-3 py-2 rounded border border-gray-300 focus:border-[#ff6908] focus:ring-1 focus:ring-[#ff6908] outline-none"
+                            value={edu.schoolName}
+                            onChange={e => updateEducation(i, 'schoolName', e.target.value)}
                           />
                         </div>
                         <div>
-                          <select 
+                          <select
                             className="w-full bg-white px-3 py-2 rounded border border-gray-300 focus:border-[#ff6908] focus:ring-1 focus:ring-[#ff6908] outline-none"
                             value={edu.level}
                             onChange={e => updateEducation(i, 'level', e.target.value)}
@@ -685,7 +680,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
                     </div>
                   ))}
                   {formData.educations.length === 0 && (
-                      <div className="text-center py-8 text-gray-400 italic">No education history added.</div>
+                    <div className="text-center py-8 text-gray-400 italic">No education history added.</div>
                   )}
                 </div>
               </div>

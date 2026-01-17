@@ -4,22 +4,16 @@ import {
   Eye,
   Loader,
   Pencil,
-  Plus,
   RefreshCw,
   Search,
   CheckCircle,
-  Briefcase,
   UserMinus,
-  MapPin
+  Plus,
 } from 'lucide-react';
 import { employeeService } from '../services/api';
-import { Employee } from '../types/employee';
-// Asumsi Anda akan membuat komponen ini nanti
-// import EmployeeForm from '../components/employee/EmployeeForm'; 
-// import EmployeeDetails from '../components/employee/EmployeeDetails';
-import { useAuth } from '../context/AuthContext';
-// import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
-// import OffboardModal from '../components/employee/OffboardModal'; // Modal khusus resign
+import { Employee, EmployeeFormDto } from '../types/employee';
+import EmployeeForm from '../components/employees/EmployeeForm';
+import EmployeeDetail from '../components/employees/EmployeeDetails';
 
 const ActiveEmployeesPage: React.FC = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -42,9 +36,6 @@ const ActiveEmployeesPage: React.FC = () => {
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  const { authState } = useAuth();
-
-  // --- Pagination Logic (Sama persis dengan ClientPage) ---
   const renderPagination = () => {
     const pages = [];
     const maxVisiblePages = 3;
@@ -101,13 +92,11 @@ const ActiveEmployeesPage: React.FC = () => {
       {i}
     </button>
   );
-  // -----------------------------------------------------
 
   useEffect(() => {
     const fetchEmployees = async () => {
       setLoading(true);
       try {
-        // Fetch khusus status DEPLOYED & INTERNAL (Active)
         const data = await employeeService.getEmployees('DEPLOYED');
         setEmployees(data);
         setFilteredEmployees(data);
@@ -126,20 +115,10 @@ const ActiveEmployeesPage: React.FC = () => {
     setFilteredEmployees(
       employees.filter(e =>
         e.fullName.toLowerCase().includes(term) ||
-        e.employeeNumber.toLowerCase().includes(term) ||
-        (e.currentClient && e.currentClient.toLowerCase().includes(term))
-      )
+        e.employeeNumber.toLowerCase().includes(term))
     );
     setCurrentPage(1);
   }, [searchTerm, employees]);
-
-  const handleSave = () => {
-    setIsCreateModalOpen(false);
-    setIsEditModalOpen(false);
-    setSelectedEmployee(null);
-    setRefreshTrigger(prev => prev + 1);
-    setNotification({ message: 'Saved successfully', type: 'success' });
-  };
 
   const handleOffboardClick = (employee: Employee) => {
     setSelectedEmployee(employee);
@@ -162,13 +141,6 @@ const ActiveEmployeesPage: React.FC = () => {
     }
   };
 
-  const hasPermission = (menuName: string, permission: string): boolean => {
-    // Logic permission disesuaikan
-    // const menu = authState?.menus.find(m => m.name === menuName);
-    // return menu ? menu.permissions.includes(permission) : false;
-    return true; // Bypass for dev
-  };
-
   useEffect(() => {
     if (notification) {
       const timeout = setTimeout(() => setNotification(null), 4000);
@@ -176,7 +148,6 @@ const ActiveEmployeesPage: React.FC = () => {
     }
   }, [notification]);
 
-  const totalPages = Math.ceil(filteredEmployees.length / perPage);
   const currentEmployees = filteredEmployees.slice((currentPage - 1) * perPage, currentPage * perPage);
 
   return (
@@ -186,15 +157,13 @@ const ActiveEmployeesPage: React.FC = () => {
           <h1 className="text-2xl font-semibold">Active Employees</h1>
           <p className="text-gray-500 text-sm mt-1">Manage deployed employees and internal staff.</p>
         </div>
-
-        {hasPermission('employee-management', 'CREATE') && (
-          <button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="flex items-center gap-2 bg-[#ff6908] text-white px-4 py-2 rounded-md hover:bg-[#e55e07] transition-colors"
-          >
-            <Plus size={18} /> Onboard Employee
-          </button>
-        )}
+        <button
+          onClick={() => setIsCreateModalOpen(true)}
+          className="flex items-center gap-2 bg-[#ff6908] text-white px-4 py-2 rounded-md hover:bg-[#e55f07] transition-colors text-sm font-medium shadow-sm"
+        >
+          <Plus size={18} />
+          Onboard Employee
+        </button>
       </div>
 
       {notification && (
@@ -271,23 +240,7 @@ const ActiveEmployeesPage: React.FC = () => {
                     </div>
                   </td>
 
-                  {/* Placement Info (Fitur Utama Outsourcing) */}
-                  <td className="px-4 py-3">
-                    {e.currentClient ? (
-                      <div className="flex flex-col">
-                        <span className="flex items-center gap-1.5 text-gray-900 font-medium">
-                          <Briefcase size={14} className="text-orange-500" />
-                          {e.currentClient}
-                        </span>
-                        <span className="flex items-center gap-1.5 text-xs text-gray-500 mt-0.5 ml-0.5">
-                          <MapPin size={12} />
-                          {e.jobTitle || 'No Title'}
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="text-gray-400 italic text-xs">Internal / No Placement</span>
-                    )}
-                  </td>
+
 
                   {/* Contact */}
                   <td className="px-4 py-3">
@@ -301,58 +254,41 @@ const ActiveEmployeesPage: React.FC = () => {
                     )}
                   </td>
 
-                  {/* Status Badge */}
-                  <td className="px-4 py-3 text-center">
-                    <span
-                      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium 
-                        ${e.status === 'DEPLOYED'
-                          ? 'bg-green-50 text-green-700 border border-green-100'
-                          : 'bg-blue-50 text-blue-700 border border-blue-100' // Internal
-                        }`}
-                    >
-                      {e.status}
-                    </span>
-                  </td>
-
                   {/* Actions */}
                   <td className="px-4 py-3">
                     <div className="flex justify-end gap-2">
-                      {hasPermission('employee-management', 'READ') && (
-                        <button
-                          onClick={() => {
-                            setSelectedEmployee(e);
-                            setIsDetailOpen(true);
-                          }}
-                          className="p-1.5 text-gray-500 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
-                          title="View 360 Profile"
-                        >
-                          <Eye size={16} />
-                        </button>
-                      )}
+                      <button
+                        onClick={() => {
+                          setSelectedEmployee(e);
+                          setIsDetailOpen(true);
+                        }}
+                        className="p-1.5 text-gray-500 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+                        title="View 360 Profile"
+                      >
+                        <Eye size={16} />
+                      </button>
 
-                      {hasPermission('employee-management', 'UPDATE') && (
-                        <button
-                          onClick={() => {
-                            setSelectedEmployee(e);
-                            setIsEditModalOpen(true);
-                          }}
-                          className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
-                          title="Edit Profile"
-                        >
-                          <Pencil size={16} />
-                        </button>
-                      )}
 
-                      {/* Tombol Khusus HRIS: Offboarding/Resign */}
-                      {hasPermission('employee-management', 'DELETE') && (
-                        <button
-                          onClick={() => handleOffboardClick(e)}
-                          className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Offboard / Resign"
-                        >
-                          <UserMinus size={16} />
-                        </button>
-                      )}
+                      <button
+                        onClick={() => {
+                          setSelectedEmployee(e);
+                          setIsEditModalOpen(true);
+                        }}
+                        className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
+                        title="Edit Profile"
+                      >
+                        <Pencil size={16} />
+                      </button>
+
+
+                      <button
+                        onClick={() => handleOffboardClick(e)}
+                        className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Offboard / Resign"
+                      >
+                        <UserMinus size={16} />
+                      </button>
+
                     </div>
                   </td>
                 </tr>
@@ -371,16 +307,42 @@ const ActiveEmployeesPage: React.FC = () => {
         </div>
       )}
 
-      {/* Modals Placeholders */}
-      {isCreateModalOpen && (
-        // Gunakan komponen EmployeeForm nanti
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg">
-            <h2 className="text-xl font-bold mb-4">Onboard New Employee</h2>
-            <p>Form component goes here...</p>
-            <button onClick={() => setIsCreateModalOpen(false)} className="mt-4 px-4 py-2 bg-gray-200 rounded">Close</button>
-          </div>
-        </div>
+      {/* Employee Context Modals */}
+      <EmployeeForm
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSave={() => setRefreshTrigger(prev => prev + 1)}
+      />
+
+      {isEditModalOpen && selectedEmployee && (
+        <EmployeeForm
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setSelectedEmployee(null);
+          }}
+          employee={selectedEmployee as unknown as EmployeeFormDto}
+          onSave={() => {
+            setRefreshTrigger(prev => prev + 1);
+            setIsEditModalOpen(false);
+            setSelectedEmployee(null);
+          }}
+        />
+      )}
+
+      {isDetailOpen && selectedEmployee && (
+        <EmployeeDetail
+          isOpen={isDetailOpen}
+          onClose={() => {
+            setIsDetailOpen(false);
+            setSelectedEmployee(null);
+          }}
+          employee={selectedEmployee as unknown as EmployeeFormDto}
+          onEdit={() => {
+            setIsDetailOpen(false);
+            setIsEditModalOpen(true);
+          }}
+        />
       )}
 
       {/* Offboard Modal (Gantikan DeleteConfirmation) */}

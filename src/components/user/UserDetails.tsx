@@ -1,6 +1,6 @@
 import React from 'react';
 import { User } from '../../types/user';
-import { UserCheck2Icon, BadgeCheck, X, MapPin } from 'lucide-react';
+import { UserCheck2Icon, BadgeCheck, X } from 'lucide-react';
 
 interface Props {
   isOpen: boolean;
@@ -39,12 +39,6 @@ const UserDetails: React.FC<Props> = ({ isOpen, onClose, onEdit, user }) => {
                 <div className="flex items-center gap-2 mt-2 text-gray-600 text-sm">
                   <BadgeCheck size={16} className="text-gray-400" />
                   <span>ROLE: {user.role.name}</span>
-                </div>
-              )}
-              {user.estate && (
-                <div className="flex items-center gap-2 mt-2 text-gray-600 text-sm">
-                  <MapPin size={16} className="text-gray-400" />
-                  <span>Estate: {user.estate.name}</span>
                 </div>
               )}
             </div>

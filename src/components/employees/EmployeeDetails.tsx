@@ -8,7 +8,6 @@ import {
   GraduationCap,
   ShieldCheck,
   Ruler,
-  Users,
   PhoneCall,
   CheckCircle,
   X,

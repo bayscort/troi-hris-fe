@@ -7,20 +7,13 @@ import {
   Plus,
   RefreshCw,
   Search,
-  Trash,
   CheckCircle,
-  Briefcase,
   UserMinus,
-  MapPin
 } from 'lucide-react';
 import { employeeService } from '../services/api';
 import { Employee } from '../types/employee';
-// Asumsi Anda akan membuat komponen ini nanti
-// import EmployeeForm from '../components/employee/EmployeeForm'; 
-// import EmployeeDetails from '../components/employee/EmployeeDetails';
 import { useAuth } from '../context/AuthContext';
-// import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
-// import OffboardModal from '../components/employee/OffboardModal'; // Modal khusus resign
+import EmployeeDetail from '../components/employees/EmployeeDetails';
 
 const TalentPoolEmployeesPage: React.FC = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -45,7 +38,6 @@ const TalentPoolEmployeesPage: React.FC = () => {
 
   const { authState } = useAuth();
 
-  // --- Pagination Logic (Sama persis dengan ClientPage) ---
   const renderPagination = () => {
     const pages = [];
     const maxVisiblePages = 3;
@@ -107,7 +99,7 @@ const TalentPoolEmployeesPage: React.FC = () => {
     const fetchEmployees = async () => {
       setLoading(true);
       try {
-        const data = await employeeService.getEmployees('BENCH'); 
+        const data = await employeeService.getEmployees('BENCH');
         setEmployees(data);
         setFilteredEmployees(data);
         setError(null);
@@ -124,21 +116,12 @@ const TalentPoolEmployeesPage: React.FC = () => {
     const term = searchTerm.toLowerCase();
     setFilteredEmployees(
       employees.filter(e =>
-        e.fullName.toLowerCase().includes(term) || 
-        e.employeeNumber.toLowerCase().includes(term) ||
-        (e.currentClient && e.currentClient.toLowerCase().includes(term))
+        e.fullName.toLowerCase().includes(term) ||
+        e.employeeNumber.toLowerCase().includes(term)
       )
     );
     setCurrentPage(1);
   }, [searchTerm, employees]);
-
-  const handleSave = () => {
-    setIsCreateModalOpen(false);
-    setIsEditModalOpen(false);
-    setSelectedEmployee(null);
-    setRefreshTrigger(prev => prev + 1);
-    setNotification({ message: 'Saved successfully', type: 'success' });
-  };
 
   const handleOffboardClick = (employee: Employee) => {
     setSelectedEmployee(employee);
@@ -175,17 +158,16 @@ const TalentPoolEmployeesPage: React.FC = () => {
     }
   }, [notification]);
 
-  const totalPages = Math.ceil(filteredEmployees.length / perPage);
   const currentEmployees = filteredEmployees.slice((currentPage - 1) * perPage, currentPage * perPage);
 
   return (
     <div className="p-8 flex-1 overflow-auto bg-white text-gray-800 font-sans">
       <div className="flex justify-between items-center mb-6">
         <div>
-            <h1 className="text-2xl font-semibold">Talent Pool</h1>
-            <p className="text-gray-500 text-sm mt-1">Manage deployed employees and internal staff.</p>
+          <h1 className="text-2xl font-semibold">Talent Pool</h1>
+          <p className="text-gray-500 text-sm mt-1">Manage deployed employees and internal staff.</p>
         </div>
-        
+
         {hasPermission('employee-management', 'CREATE') && (
           <button
             onClick={() => setIsCreateModalOpen(true)}
@@ -266,27 +248,11 @@ const TalentPoolEmployeesPage: React.FC = () => {
                   <td className="px-4 py-3">
                     <div className="font-medium text-gray-900">{e.fullName}</div>
                     <div className="text-xs text-gray-500 mt-0.5">
-                       ID: {e.identityNumber || '-'}
+                      ID: {e.identityNumber || '-'}
                     </div>
                   </td>
 
-                  {/* Placement Info (Fitur Utama Outsourcing) */}
-                  <td className="px-4 py-3">
-                    {e.currentClient ? (
-                        <div className="flex flex-col">
-                            <span className="flex items-center gap-1.5 text-gray-900 font-medium">
-                                <Briefcase size={14} className="text-orange-500" />
-                                {e.currentClient}
-                            </span>
-                            <span className="flex items-center gap-1.5 text-xs text-gray-500 mt-0.5 ml-0.5">
-                                <MapPin size={12} />
-                                {e.jobTitle || 'No Title'}
-                            </span>
-                        </div>
-                    ) : (
-                        <span className="text-gray-400 italic text-xs">Internal / No Placement</span>
-                    )}
-                  </td>
+
 
                   {/* Contact */}
                   <td className="px-4 py-3">
@@ -304,12 +270,12 @@ const TalentPoolEmployeesPage: React.FC = () => {
                   <td className="px-4 py-3 text-center">
                     <span
                       className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium 
-                        ${e.status === 'BENCH' 
-                            ? 'bg-green-50 text-green-700 border border-green-100' 
-                            : 'bg-blue-50 text-blue-700 border border-blue-100' // Internal
+                        ${e.active === true
+                          ? 'bg-green-50 text-green-700 border border-green-100'
+                          : 'bg-blue-50 text-blue-700 border border-blue-100' // Internal
                         }`}
                     >
-                      {e.status}
+                      {e.active}
                     </span>
                   </td>
 
@@ -328,7 +294,7 @@ const TalentPoolEmployeesPage: React.FC = () => {
                           <Eye size={16} />
                         </button>
                       )}
-                      
+
                       {hasPermission('talent-pool', 'UPDATE') && (
                         <button
                           onClick={() => {
@@ -370,59 +336,85 @@ const TalentPoolEmployeesPage: React.FC = () => {
       )}
 
       {/* Modals Placeholders */}
+      {isDetailOpen && selectedEmployee && (
+        <EmployeeDetail
+          isOpen={isDetailOpen}
+          onClose={() => {
+            setIsDetailOpen(false);
+            setSelectedEmployee(null);
+          }}
+          employee={selectedEmployee}
+          onEdit={() => {
+            setIsDetailOpen(false);
+            setIsEditModalOpen(true);
+          }}
+        />
+      )}
+
       {isCreateModalOpen && (
         // Gunakan komponen EmployeeForm nanti
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg">
-                <h2 className="text-xl font-bold mb-4">Onboard New Employee</h2>
-                <p>Form component goes here...</p>
-                <button onClick={() => setIsCreateModalOpen(false)} className="mt-4 px-4 py-2 bg-gray-200 rounded">Close</button>
-            </div>
+          <div className="bg-white p-6 rounded-lg">
+            <h2 className="text-xl font-bold mb-4">Onboard New Employee</h2>
+            <p>Form component goes here...</p>
+            <button onClick={() => setIsCreateModalOpen(false)} className="mt-4 px-4 py-2 bg-gray-200 rounded">Close</button>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal Placeholder */}
+      {isEditModalOpen && selectedEmployee && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg">
+            <h2 className="text-xl font-bold mb-4">Edit Employee: {selectedEmployee.fullName}</h2>
+            <p>Edit form component goes here...</p>
+            <button onClick={() => setIsEditModalOpen(false)} className="mt-4 px-4 py-2 bg-gray-200 rounded">Close</button>
+          </div>
         </div>
       )}
 
       {/* Offboard Modal (Gantikan DeleteConfirmation) */}
       {isOffboardModalOpen && selectedEmployee && (
-         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-         <div className="bg-white p-6 rounded-lg w-[400px]">
-             <div className="flex items-center gap-3 text-red-600 mb-4">
-                 <AlertTriangle size={24} />
-                 <h2 className="text-xl font-bold">Confirm Offboarding</h2>
-             </div>
-             <p className="text-sm text-gray-600 mb-4">
-                 Are you sure you want to offboard <b>{selectedEmployee.fullName}</b>? 
-                 This will terminate their active placement and disable app access.
-             </p>
-             
-             {/* Simple Form Placeholder for Reason */}
-             <div className="space-y-3 mb-6">
-                <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Effective Date</label>
-                    <input type="date" className="w-full border rounded px-2 py-1.5 text-sm" />
-                </div>
-                <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Reason</label>
-                    <select className="w-full border rounded px-2 py-1.5 text-sm">
-                        <option>Resign</option>
-                        <option>Contract Ended</option>
-                        <option>Terminated</option>
-                    </select>
-                </div>
-             </div>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg w-[400px]">
+            <div className="flex items-center gap-3 text-red-600 mb-4">
+              <AlertTriangle size={24} />
+              <h2 className="text-xl font-bold">Confirm Offboarding</h2>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">
+              Are you sure you want to offboard <b>{selectedEmployee.fullName}</b>?
+              This will terminate their active placement and disable app access.
+            </p>
 
-             <div className="flex justify-end gap-2">
-                 <button onClick={() => setIsOffboardModalOpen(false)} className="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 text-sm">Cancel</button>
-                 <button 
-                    onClick={() => confirmOffboard('Resign', new Date().toISOString())} 
-                    disabled={actionLoading}
-                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 flex items-center gap-2 text-sm"
-                 >
-                    {actionLoading && <Loader size={14} className="animate-spin" />}
-                    Confirm Offboard
-                 </button>
-             </div>
-         </div>
-     </div>
+            {/* Simple Form Placeholder for Reason */}
+            <div className="space-y-3 mb-6">
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Effective Date</label>
+                <input type="date" className="w-full border rounded px-2 py-1.5 text-sm" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Reason</label>
+                <select className="w-full border rounded px-2 py-1.5 text-sm">
+                  <option>Resign</option>
+                  <option>Contract Ended</option>
+                  <option>Terminated</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setIsOffboardModalOpen(false)} className="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 text-sm">Cancel</button>
+              <button
+                onClick={() => confirmOffboard('Resign', new Date().toISOString())}
+                disabled={actionLoading}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 flex items-center gap-2 text-sm"
+              >
+                {actionLoading && <Loader size={14} className="animate-spin" />}
+                Confirm Offboard
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
     </div>

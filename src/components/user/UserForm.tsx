@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { User, Role, UserCreate } from '../../types/user';
-import { Estate } from '../../types/location';
 import { userService } from '../../services/api';
 import { AlertTriangle, CheckCircle, Loader, X } from 'lucide-react';
 
@@ -10,10 +9,9 @@ interface Props {
   onSave: () => void;
   user?: User;
   roles: Role[];
-  estates: Estate[];
 }
 
-const UserForm: React.FC<Props> = ({ isOpen, onClose, onSave, user, roles, estates }) => {
+const UserForm: React.FC<Props> = ({ isOpen, onClose, onSave, user, roles }) => {
   const isEdit = !!user?.id;
 
   const [formData, setFormData] = useState<Omit<UserCreate, 'id'>>({
@@ -21,7 +19,6 @@ const UserForm: React.FC<Props> = ({ isOpen, onClose, onSave, user, roles, estat
     username: '',
     password: '',
     roleId: roles[0]?.id ?? 0,
-    estateId: estates[0]?.id ?? null,
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof typeof formData, string>>>({});
@@ -36,7 +33,6 @@ const UserForm: React.FC<Props> = ({ isOpen, onClose, onSave, user, roles, estat
         username: user.username,
         password: '',
         roleId: user.role?.id ?? roles[0]?.id ?? 0,
-        estateId: user.estate?.id ?? null,
       });
     } else if (!isEdit && roles.length > 0) {
       setFormData({
@@ -44,7 +40,6 @@ const UserForm: React.FC<Props> = ({ isOpen, onClose, onSave, user, roles, estat
         username: '',
         password: '',
         roleId: roles[0]?.id ?? 0,
-        estateId: null,
       });
     }
   }, [user, roles, isEdit]);
@@ -56,7 +51,6 @@ const UserForm: React.FC<Props> = ({ isOpen, onClose, onSave, user, roles, estat
         username: '',
         password: '',
         roleId: roles[0]?.id ?? 0,
-        estateId: null,
       });
       setErrors({});
       setError(null);
@@ -209,24 +203,7 @@ const UserForm: React.FC<Props> = ({ isOpen, onClose, onSave, user, roles, estat
             </select>
             {errors.roleId && <p className="text-sm text-red-500 mt-1">{errors.roleId}</p>}
           </div>
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Estate</label>
-            <select
-              name="estateId"
-              value={formData.estateId ?? ''}
-              onChange={handleChange}
-              className={`w-full px-3 py-2 border rounded-md ${errors.estateId ? 'border-red-500' : 'border-gray-300'} focus:outline-none focus:ring-2 focus:ring-[#ff832f]`}
-            >
-              <option value="">Select origin</option>
-              {estates.map((r) => (
-                <option key={r.id} value={r.id}>
-                  {r.name}
-                </option>
-              ))}
-            </select>
-            {errors.estateId && <p className="text-sm text-red-500 mt-1">{errors.estateId}</p>}
 
-          </div>
 
 
           <div className="flex justify-end gap-3">

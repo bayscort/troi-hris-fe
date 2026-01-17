@@ -20,7 +20,7 @@ import EmployeeDetail from '../components/employees/EmployeeDetails';
 import * as XLSX from 'xlsx';
 
 const downloadEmployeeTemplate = () => {
-  const ws = XLSX.utils.json_to_sheet([
+  const ws = (XLSX.utils as any).json_to_sheet([
     {
       'Full Name': '',
       'Employee Number': '',
@@ -33,8 +33,8 @@ const downloadEmployeeTemplate = () => {
     },
   ]);
 
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Template');
+  const wb = (XLSX.utils as any).book_new();
+  (XLSX.utils as any).book_append_sheet(wb, ws, 'Template');
 
   XLSX.writeFile(wb, 'employee_template.xlsx');
 };
@@ -60,10 +60,12 @@ const exportEmployeesToExcel = (employees: Employee[]) => {
     };
   });
 
-  const worksheet = XLSX.utils.json_to_sheet(data);
-  const workbook = XLSX.utils.book_new();
 
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Employees');
+
+  const worksheet = (XLSX.utils as any).json_to_sheet(data);
+  const workbook = (XLSX.utils as any).book_new();
+
+  (XLSX.utils as any).book_append_sheet(workbook, worksheet, 'Employees');
 
   XLSX.writeFile(
     workbook,
@@ -83,7 +85,7 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
 
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(0);
+  const [page] = useState(0);
 
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -185,16 +187,6 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
           : f
       )
     );
-  };
-
-  const updateField = (id: string, field: FilterField) => {
-    const def = FILTER_DEFINITIONS.find(d => d.field === field);
-
-    updateFilter(id, {
-      field,
-      operator: def?.operators[0], // default selalu set
-      value: undefined,
-    });
   };
 
   const addFilter = () => {
@@ -501,7 +493,7 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
                     {/* MULTI FILTER ROWS (AND / OR) */}
                     <div className="space-y-2 border-t pt-4">
 
-                      {filters.map((f, idx) => {
+                      {filters.map((f) => {
                         const def = FILTER_DEFINITIONS.find(d => d.field === f.field);
 
                         return (
@@ -803,10 +795,6 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
                 </tr>
               ) : (
                 employees.map((emp) => {
-                  const primaryJob =
-                    emp.jobReferences?.find((jr) => jr.primaryReference) ??
-                    emp.jobReferences?.[0];
-
                   return (
                     <tr
                       key={emp.id}

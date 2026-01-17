@@ -1,5 +1,3 @@
-import { Estate } from "./location";
-
 export interface Role {
   id?: number;
   name: string;
@@ -10,7 +8,6 @@ export interface User {
   name: string;
   username: string;
   role: Role
-  estate: Estate
 }
 
 export interface UserCreate {
@@ -18,5 +15,4 @@ export interface UserCreate {
   username: string;
   password: string;
   roleId: number
-  estateId: number | null
 };
