@@ -1,5 +1,5 @@
 export interface Employee {
-id?: string;
+  id?: string;
   fullName: string;
   employeeNumber: string;
   identityNumber?: string;
@@ -44,7 +44,7 @@ export interface OnboardEmployeeRequest {
   identityNumber: string; // KTP
   email: string;
   phoneNumber: string;
-  address?: string;  
+  address?: string;
   username: string;
   password: string;
   roleId: string;
@@ -95,6 +95,12 @@ export interface JobReferenceForm {
   certificationExpiryDate?: string;
   certified: boolean;
   primaryReference: boolean;
+  // Backend response structure
+  jobReference?: {
+    id: string;
+    name: string;
+    code?: string;
+  };
 }
 
 export interface EducationForm {

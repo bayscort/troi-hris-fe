@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Employee, EmployeeCategory } from '../types/employee';
+import { Employee, EmployeeCategory, EmployeeFormDto } from '../types/employee';
 import { employeeService } from '../services/api';
 import {
   Loader,
@@ -13,6 +13,8 @@ import {
   ArrowUpDown,
   Upload,
   Download,
+  ArrowLeft,
+  ArrowRight,
 } from 'lucide-react';
 import EmployeeForm from '../components/employees/EmployeeForm';
 import EmployeeDetail from '../components/employees/EmployeeDetails';
@@ -24,12 +26,23 @@ const downloadEmployeeTemplate = () => {
     {
       'Full Name': '',
       'Employee Number': '',
+      'Identity Number': '',
       'Email': '',
       'Phone': '',
+      'Place of Birth': '',
+      'Date of Birth': '',
+      'Gender': '', // MALE / FEMALE
+      'Religion': '',
+      'Blood Type': '',
       'Province': '',
       'City': '',
-      'Gender': '',
-      'Status': '',
+      'District': '',
+      'Address': '',
+      'Height (cm)': '',
+      'Weight (kg)': '',
+      'Family Members': '',
+      'Emergency Contact Name': '',
+      'Emergency Contact Phone': '',
     },
   ]);
 
@@ -45,18 +58,38 @@ const exportEmployeesToExcel = (employees: Employee[]) => {
       ?.map(jr => `${jr.name ?? '-'} (${jr.experienceYears} yr)`)
       .join(' | ');
 
+    const educations = emp.educations
+      ?.map(edu => `${edu.schoolName} (${edu.level})`)
+      .join(' | ');
+
     return {
       'Full Name': emp.fullName,
       'Employee Number': emp.employeeNumber,
+      'Identity Number': emp.identityNumber ?? '',
       'Email': emp.email,
       'Phone': emp.phoneNumber,
-      'Province': emp.province,
-      'City': emp.city,
-      'Gender': emp.gender,
+
       'Place of Birth': emp.placeOfBirth ?? '',
       'Date of Birth': emp.dateOfBirth ?? '',
+      'Gender': emp.gender,
+      'Religion': emp.religion ?? '',
+      'Blood Type': emp.bloodType ?? '',
+
+      'Province': emp.province,
+      'City': emp.city,
+      'District': emp.district ?? '',
+      'Address': emp.fullAddress ?? '',
+
+      'Height (cm)': emp.heightCm ?? '',
+      'Weight (kg)': emp.weightKg ?? '',
+      'Family Members': emp.familyMemberCount ?? '',
+
+      'Emergency Contact Name': emp.emergencyContactName ?? '',
+      'Emergency Contact Phone': emp.emergencyContactPhone ?? '',
+
       'Status': emp.active ? 'Active' : 'Inactive',
       'Job References': jobRefs ?? '',
+      'Educations': educations ?? '',
     };
   });
 
@@ -84,6 +117,8 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
 
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -318,18 +353,21 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
     });
   };
 
-  const [rawEmployees, setRawEmployees] = useState<Employee[]>([]);
+  // Renamed to store ALL data
+  const [allEmployees, setAllEmployees] = useState<Employee[]>([]);
 
   const fetchData = async () => {
     setLoading(true);
     try {
       const res = await employeeService.search({
         category,
-        page,
-        size: 10,
+        page: 0,
+        size: 10000, // Fetch 'all'
       });
 
-      setRawEmployees(res.content); // ⬅️ SIMPAN DATA ASLI
+      setAllEmployees(res.content); // Store raw full dataset
+      // Total elements for client-side search scope is the API total
+      // but totalPages will be dynamic based on filtering
     } catch (error) {
       console.error('Failed to fetch employees', error);
     } finally {
@@ -338,72 +376,64 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
   };
 
   useEffect(() => {
-    let data = [...rawEmployees];
-    // SEARCH
+    let data = [...allEmployees];
+
+    // 1. FILTER & SEARCH (Global scope)
     if (search) {
       data = data.filter(e =>
         e.fullName.toLowerCase().includes(search.toLowerCase()) ||
         e.employeeNumber.toLowerCase().includes(search.toLowerCase())
       );
     }
-
-    // FILTER
     data = applyFilters(data);
 
-    // SORT
+    // 2. SORT (Global scope)
     data = applySort(data);
 
-    setEmployees(data);
+    // 3. UPDATE PAGINATION META
+    setTotalElements(data.length);
+    setTotalPages(Math.ceil(data.length / 10));
 
-  }, [rawEmployees, search, filters, sort]
-  );
+    // 4. PAGINATE (Slice for display)
+    const startIndex = page * 10;
+    const paginatedData = data.slice(startIndex, startIndex + 10);
 
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (
-        filterRef.current &&
-        !filterRef.current.contains(e.target as Node)
-      ) {
-        setFilterOpen(false);
-      }
-    };
+    setEmployees(paginatedData);
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [allEmployees, search, filters, sort, page]); // Depend on page specifically for slicing
 
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (
-        sortRef.current &&
-        !sortRef.current.contains(e.target as Node)
-      ) {
-        setSortOpen(false);
-      }
-    };
+    // Reset page to 0 when filters change to avoid empty views
+    setPage(0);
+  }, [search, filters, sort]);
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-
+  // Initial fetch only on category change
   useEffect(() => {
     fetchData();
-  }, [category, page]);
+    setPage(0);
+  }, [category]);
 
   const handleDelete = async (id: string) => {
     if (
       !window.confirm(
-        'Are you sure you want to remove this employee data? This action cannot be undone.'
+        'Are you sure you want to permanently delete this employee? This action cannot be undone.'
       )
     )
       return;
 
+    // Optimistic UI
+    setAllEmployees(prev => prev.filter(e => e.id !== id));
+
     try {
       await employeeService.delete(id);
+
+      // Optional: re-fetch to ensure consistency
       fetchData();
+
     } catch (error) {
+      console.error('Delete failed', error);
       alert('Failed to delete employee');
+      fetchData(); // rollback
     }
   };
 
@@ -413,37 +443,111 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // 1. Fetch existing employees for duplicate checking
+    let existingEmails = new Set<string>();
+    try {
+      // Fetch a large page to cover most employees for client-side check
+      // Ideally this should be server-side, but per instruction we do it here.
+      const res = await employeeService.search({
+        category: 'ALL', // Check against ALL categories
+        page: 0,
+        size: 3000,
+      });
+      res.content.forEach(emp => {
+        if (emp.email) {
+          existingEmails.add(emp.email.trim().toLowerCase());
+        }
+      });
+    } catch (err) {
+      console.error('Failed to fetch existing employees for dup check', err);
+      // We proceed, but duplication check might be weak
+    }
+
     const buffer = await file.arrayBuffer();
     const workbook = XLSX.read(buffer, { type: 'array' });
 
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     const rows = XLSX.utils.sheet_to_json<any>(sheet);
 
-    const employeesToImport: Employee[] = rows.map(row => ({
-      fullName: row['Full Name'],
-      employeeNumber: row['Employee Number'],
-      email: row['Email'],
-      phoneNumber: row['Phone'],
-      province: row['Province'],
-      city: row['City'],
-      gender: row['Gender'],
-      active: row['Status'] === 'Active',
+    // Helper to parse diverse date formats
+    const parseExcelDate = (input: any): string | undefined => {
+      if (!input) return undefined;
 
-      // ✅ WAJIB ADA
-      jobReferences: [],
-      educations: [],
-    }));
+      // 1. Handle Excel Serial Date (e.g., 44562)
+      if (typeof input === 'number') {
+        const date = new Date(Math.round((input - 25569) * 86400 * 1000));
+        return date.toISOString().split('T')[0];
+      }
 
+      // 2. Handle String Dates
+      if (typeof input === 'string') {
+        const date = new Date(input);
+        if (!isNaN(date.getTime())) {
+          return date.toISOString().split('T')[0];
+        }
+      }
+      return undefined;
+    };
+
+    let createdCount = 0;
+    let skippedCount = 0;
+
+    const employeesToImport: EmployeeFormDto[] = [];
+
+    for (const row of rows) {
+      const email = row['Email'] ? String(row['Email']).trim() : undefined;
+      const hasEmployeeNumber = !!row['Employee Number'];
+
+      // DUPLICATION CHECK:
+      // If NO employee number is provided (which means we would generate a random IMP-id),
+      // AND the email already exists in our database -> SKIP IT.
+      if (!hasEmployeeNumber && email && existingEmails.has(email.toLowerCase())) {
+        skippedCount++;
+        continue;
+      }
+
+      employeesToImport.push({
+        fullName: row['Full Name'] || 'Unknown Employee',
+        // Generate temp ID if missing
+        employeeNumber: hasEmployeeNumber
+          ? String(row['Employee Number'])
+          : `IMP-${Math.floor(Math.random() * 10000)}`,
+
+        email: email,
+        phoneNumber: row['Phone'] ? String(row['Phone']) : undefined,
+        province: row['Province'],
+        city: row['City'],
+        gender: row['Gender'] ? (row['Gender'].toString().toUpperCase() as 'MALE' | 'FEMALE') : 'MALE',
+        active: true,
+
+        identityNumber: row['Identity Number'] ? String(row['Identity Number']) : undefined,
+        placeOfBirth: row['Place of Birth'],
+        dateOfBirth: parseExcelDate(row['Date of Birth']),
+        religion: row['Religion'],
+        bloodType: row['Blood Type'],
+        district: row['District'],
+        fullAddress: row['Address'],
+        heightCm: row['Height (cm)'] ? Number(row['Height (cm)']) : undefined,
+        weightKg: row['Weight (kg)'] ? Number(row['Weight (kg)']) : undefined,
+        familyMemberCount: row['Family Members'] ? Number(row['Family Members']) : undefined,
+        emergencyContactName: row['Emergency Contact Name'],
+        emergencyContactPhone: row['Emergency Contact Phone'] ? String(row['Emergency Contact Phone']) : undefined,
+
+        jobReferences: [],
+        educations: [],
+      });
+    }
 
     try {
       for (const emp of employeesToImport) {
         await employeeService.create(emp);
+        createdCount++;
       }
       fetchData();
-      alert('Import Excel berhasil');
+      alert(`Import Selesai.\nBerhasil dibuat: ${createdCount}\nDilewati (Email Duplikat): ${skippedCount}`);
     } catch (err) {
       console.error(err);
-      alert('Import gagal');
+      alert('Import gagal sebagian atau sepenuhnya. Cek console.');
     } finally {
       e.target.value = '';
     }
@@ -858,9 +962,9 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
                           <div className="space-y-2">
                             {emp.jobReferences.map((jr, idx) => (
                               <div key={idx} className="flex items-center gap-2">
-                                {/* <span className="font-medium">
-                                    {jr.name || '-'}
-                                </span> */}
+                                <span className="font-medium text-gray-700">
+                                  {jr.jobReference?.name ?? jr.name ?? '-'}
+                                </span>
 
                                 {jr.primaryReference && (
                                   <span className="text-[10px] bg-orange-100 text-orange-700 px-1.5 rounded">
@@ -869,7 +973,7 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
                                 )}
 
                                 <span className="text-xs text-gray-400">
-                                  • {jr.experienceYears} yr
+                                  ({jr.experienceYears} yr)
                                 </span>
                               </div>
                             ))}
@@ -884,8 +988,13 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
 
                       {/* STATUS */}
                       <td className="px-6 py-4">
-                        <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          Active
+                        <span
+                          className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${emp.active
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                            }`}
+                        >
+                          {emp.active ? 'Active' : 'Inactive'}
                         </span>
                       </td>
 
@@ -926,6 +1035,63 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
               )}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      {/* PAGINATION */}
+      <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6 mt-4 rounded-lg shadow-sm">
+        <div className="flex flex-1 justify-between sm:hidden">
+          <button
+            onClick={() => setPage((p) => Math.max(0, p - 1))}
+            disabled={page === 0}
+            className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+          >
+            Previous
+          </button>
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+            disabled={page >= totalPages - 1}
+            className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+        <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm text-gray-700">
+              Showing page <span className="font-medium">{page + 1}</span> of{' '}
+              <span className="font-medium">{totalPages}</span> ({totalElements} results)
+            </p>
+          </div>
+          <div>
+            <nav
+              className="isolate inline-flex -space-x-px rounded-md shadow-sm"
+              aria-label="Pagination"
+            >
+              <button
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                disabled={page === 0}
+                className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+              >
+                <span className="sr-only">Previous</span>
+                <ArrowLeft size={16} />
+              </button>
+
+              {/* Simple Page Indicator */}
+              <span className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 focus:outline-offset-0">
+                {page + 1}
+              </span>
+
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                disabled={page >= totalPages - 1}
+                className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+              >
+                <span className="sr-only">Next</span>
+                <ArrowRight size={16} />
+              </button>
+            </nav>
+          </div>
         </div>
       </div>
 

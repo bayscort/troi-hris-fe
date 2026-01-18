@@ -20,6 +20,7 @@ import ShiftAssignmentPage from './pages/ShiftAssignmentPage';
 import ShiftRosterPage from './pages/ShiftRosterPage';
 import DeploymentPage from './pages/DeploymentPage';
 import AttendanceLogPage from './pages/AttendanceLogPage';
+import ActivePlacementPage from './pages/ActivePlacementPage';
 
 export function App() {
   useEffect(() => {
@@ -60,6 +61,7 @@ export function App() {
                       <Route path="/onboarding" element={<OnboardEmployeePage />} />
                       <Route path="/role" element={<RolesPage />} />
                       <Route path="/role-permission-configuration" element={<RolePermissionsPage />} />
+                      <Route path="/active-placement" element={<ActivePlacementPage />} />
                       <Route path="/contact-support" element={<ContactSupportPage />} />
 
                     </Routes>
