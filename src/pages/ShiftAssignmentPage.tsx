@@ -85,26 +85,46 @@ const ShiftAssignmentPage: React.FC = () => {
                 setSelectedJobPositionId('');
                 setEmployees([]);
 
-                // Parallel Fetching untuk performa
+                // Helper for safe fetching
+                // Helper for safe fetching
+                const safeFetch = async <T extends any>(promise: Promise<T>, fallback: T): Promise<T> => {
+                    try {
+                        return await promise;
+                    } catch (e) {
+                        console.warn("Fetch failed, using fallback:", e);
+                        return fallback;
+                    }
+                };
+
+                // Parallel Fetching dengan fallback error handling
                 const [sitesData, jobsData, patternsData] = await Promise.all([
-                    clientSiteService.getClientSiteByClientId(selectedClientId),
-                    jobPositionService.getJobPositionByClientId(selectedClientId),
-                    shiftPatternService.getByClient(selectedClientId)
+                    safeFetch(clientSiteService.getClientSiteByClientId(selectedClientId), []),
+                    safeFetch(jobPositionService.getJobPositionByClientId(selectedClientId), []),
+                    safeFetch(shiftPatternService.getByClient(selectedClientId), [])
                 ]);
 
                 setSites(sitesData);
                 setJobPositions(jobsData);
                 setPatterns(patternsData);
 
-                if (!selectedClientId && sitesData.length > 0) {
-                    const defaultClient = sitesData[0];
-                    if (defaultClient?.id) {
-                        setSelectedSiteId(defaultClient.id);
+                // DEBUG LOGS REMOVED
+
+                if (sitesData.length > 0) {
+                    const defaultSite = sitesData[0];
+                    if (defaultSite?.id) {
+                        setSelectedSiteId(defaultSite.id);
+                    }
+                }
+
+                if (jobsData.length > 0) {
+                    const defaultJob = jobsData[0];
+                    if (defaultJob?.id) {
+                        setSelectedJobPositionId(defaultJob.id);
                     }
                 }
 
             } catch (error) {
-                console.error("Failed to load client metadata", error);
+                console.error("Failed to load client metadata (critical error)", error);
             } finally {
                 setLoading(false);
             }

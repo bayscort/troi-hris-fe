@@ -109,12 +109,21 @@ const exportEmployeesToExcel = (employees: Employee[]) => {
 
 import { useClickOutside } from '../hooks/useClickOutside';
 
+// ... imports
+
 interface Props {
   category: EmployeeCategory;
   showAddButton?: boolean;
+  eligibleEmployeeIds?: string[]; // Optional: Filter by specific IDs
+  hideHeader?: boolean;           // Optional: Hide the top title section
 }
 
-export default function BaseEmployeeList({ category, showAddButton }: Props) {
+export default function BaseEmployeeList({
+  category,
+  showAddButton,
+  eligibleEmployeeIds,
+  hideHeader = false
+}: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -375,6 +384,14 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
   useEffect(() => {
     let data = [...allEmployees];
 
+    // 0. EXTERNAL FILTER (e.g. from ActivePlacement)
+    if (eligibleEmployeeIds && eligibleEmployeeIds.length > 0) {
+      data = data.filter(e => e.id && eligibleEmployeeIds.includes(e.id));
+    } else if (eligibleEmployeeIds && eligibleEmployeeIds.length === 0) {
+      // If provided but empty, show nothing
+      data = [];
+    }
+
     // 1. FILTER & SEARCH (Global scope)
     if (search) {
       data = data.filter(e =>
@@ -614,13 +631,17 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
       {/* HEADER */}
       <div className="flex flex-col gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Users className="text-[#ff6908]" />
-            Employee Management
-          </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Manage your {category.toLowerCase()} staff members.
-          </p>
+          {!hideHeader && (
+            <>
+              <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <Users className="text-[#ff6908]" />
+                Employee Management
+              </h1>
+              <p className="text-sm text-gray-500 mt-1">
+                Manage your {category.toLowerCase()} staff members.
+              </p>
+            </>
+          )}
 
           {selectedIds.size > 0 && (
             <div className="mt-2 text-sm text-[#ff6908] bg-orange-50 inline-block px-3 py-1 rounded-md border border-orange-100 animate-[fadeIn_0.2s_ease-out]">

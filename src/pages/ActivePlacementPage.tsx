@@ -2,17 +2,20 @@ import { useEffect, useState } from 'react';
 import {
     clientService,
     clientSiteService,
-    employeeService,
+    rosterService
 } from '../services/api';
 import { Client } from '../types/client';
 import { ClientSite } from '../types/client-site';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { Building2, Users } from 'lucide-react';
+import { Building2, Users, X } from 'lucide-react';
+import BaseEmployeeList from './BaseEmployeeList'; // Import reused component
 
 interface SiteData {
+    siteId: string; // Added ID
     siteName: string;
     count: number;
     color: string;
+    employeeIds: string[]; // Added IDs list
 }
 
 interface ClientDashboardData {
@@ -29,6 +32,9 @@ const ActivePlacementPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    // Modal State
+    const [selectedSite, setSelectedSite] = useState<SiteData | null>(null);
+
     useEffect(() => {
         fetchData();
     }, []);
@@ -37,6 +43,7 @@ const ActivePlacementPage = () => {
         try {
             setLoading(true);
             setError(null);
+
             const clients = await clientService.getAllClients();
 
             if (!Array.isArray(clients) || clients.length === 0) {
@@ -44,6 +51,13 @@ const ActivePlacementPage = () => {
                 setLoading(false);
                 return;
             }
+
+            // Get Today's Date for Roster Query
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const dateStr = `${year}-${month}-${day}`;
 
             const promises = clients.map(async (client) => {
                 if (!client.id) return null;
@@ -61,20 +75,32 @@ const ActivePlacementPage = () => {
                         };
                     }
 
-                    // 2. Get Active Employees for Each Site
+                    // 2. Get Active Employees for Each Site using ROSTER Service (More reliable for counts)
                     const siteStatsPromises = sites.map(async (site, index) => {
-                        if (!site.id) return { siteName: site.name, count: 0, color: COLORS[index % COLORS.length] };
+                        if (!site.id) return { siteId: '', siteName: site.name, count: 0, color: COLORS[index % COLORS.length], employeeIds: [] };
                         try {
-                            // Note: 'getActiveBySite' returns the list of employees. We count them.
-                            const employees = await employeeService.getActiveBySite(site.id);
+                            // Use getMatrix for specific day to get accurate active headcount on site
+                            const rosterResponse = await rosterService.getMatrix(
+                                site.id,
+                                dateStr,
+                                dateStr
+                            );
+
+                            // Count unique rows (employees) & Collect IDs
+                            const rows = rosterResponse.rows || [];
+                            const count = rows.length;
+                            const employeeIds = rows.map(r => r.employeeId); // Collect IDs
+
                             return {
+                                siteId: site.id,
                                 siteName: site.name,
-                                count: Array.isArray(employees) ? employees.length : 0, // Safety check
-                                color: COLORS[index % COLORS.length]
+                                count: count,
+                                color: COLORS[index % COLORS.length],
+                                employeeIds: employeeIds
                             };
                         } catch (e) {
-                            console.error(`Failed to fetch employees for site ${site.id}`, e);
-                            return { siteName: site.name, count: 0, color: COLORS[index % COLORS.length] };
+                            console.error(`Failed to fetch roster for site ${site.id}`, e);
+                            return { siteId: site.id, siteName: site.name, count: 0, color: COLORS[index % COLORS.length], employeeIds: [] };
                         }
                     });
 
@@ -85,11 +111,10 @@ const ActivePlacementPage = () => {
                         client,
                         sites,
                         totalEmployees: total,
-                        siteDistribution: siteStats.filter(s => s.count > 0) // Only show active sites in chart
+                        siteDistribution: siteStats.filter(s => s.count > 0)
                     };
-                } catch (err) {
+                } catch (err: any) {
                     console.error(`Failed to fetch data for client ${client.id}`, err);
-                    // Return valid client object with 0 data instead of null to show broken client
                     return {
                         client,
                         sites: [],
@@ -102,10 +127,6 @@ const ActivePlacementPage = () => {
             const results = await Promise.all(promises);
             const validResults = results.filter(Boolean) as ClientDashboardData[];
             setDashboardData(validResults);
-
-            if (validResults.length === 0 && clients.length > 0) {
-                setError("Loaded clients but failed to retrieve site data.");
-            }
 
         } catch (error: any) {
             console.error('Failed to load dashboard data', error);
@@ -157,7 +178,7 @@ const ActivePlacementPage = () => {
     }
 
     return (
-        <div className="p-6 space-y-6">
+        <div className="p-6 space-y-6 relative">
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-800">Active Placement</h1>
@@ -171,35 +192,35 @@ const ActivePlacementPage = () => {
                 </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                 {dashboardData.map((data) => (
-                    <div key={data.client.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col">
+                    <div key={data.client.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col">
 
                         {/* Header */}
-                        <div className="flex items-start justify-between mb-6">
+                        <div className="flex items-start justify-between mb-4">
                             <div className="flex items-center gap-3">
                                 <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
-                                    <Building2 size={24} />
+                                    <Building2 size={20} />
                                 </div>
-                                <div>
-                                    <h3 className="font-semibold text-gray-800">{data.client.name}</h3>
-                                    <p className="text-xs text-gray-500">{data.sites.length} Active Sites</p>
+                                <div className="min-w-0">
+                                    <h3 className="font-semibold text-gray-800 text-sm truncate" title={data.client.name}>{data.client.name}</h3>
+                                    <p className="text-[10px] text-gray-500">{data.sites.length} Active Sites</p>
                                 </div>
                             </div>
                         </div>
 
                         {/* Chart Area */}
-                        <div className="flex-1 min-h-[250px] relative">
+                        <div className="flex-1 min-h-[160px] relative">
                             {data.totalEmployees > 0 ? (
                                 <>
-                                    <ResponsiveContainer width="100%" height={200}>
+                                    <ResponsiveContainer width="100%" height={160}>
                                         <PieChart>
                                             <Pie
                                                 data={data.siteDistribution}
                                                 cx="50%"
                                                 cy="50%"
-                                                innerRadius={60}
-                                                outerRadius={80}
+                                                innerRadius={45}
+                                                outerRadius={65}
                                                 paddingAngle={5}
                                                 dataKey="count"
                                             >
@@ -218,15 +239,15 @@ const ActivePlacementPage = () => {
                                     </ResponsiveContainer>
 
                                     {/* Center Text */}
-                                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-[60%] text-center pointer-events-none">
-                                        <p className="text-2xl font-bold text-gray-800">{data.totalEmployees}</p>
-                                        <p className="text-xs text-gray-500 font-medium">Total Employees</p>
+                                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-[55%] text-center pointer-events-none">
+                                        <p className="text-xl font-bold text-gray-800">{data.totalEmployees}</p>
+                                        <p className="text-[10px] text-gray-500 font-medium">Total Employees</p>
                                     </div>
                                 </>
                             ) : (
                                 <div className="flex flex-col items-center justify-center h-full text-gray-400">
-                                    <Users size={48} className="mb-2 opacity-20" />
-                                    <p className="text-sm">No employees deployed</p>
+                                    <Users size={32} className="mb-2 opacity-20" />
+                                    <p className="text-xs">No employees deployed</p>
                                 </div>
                             )}
                         </div>
@@ -234,14 +255,21 @@ const ActivePlacementPage = () => {
                         {/* Legend / Details */}
                         <div className="mt-4 space-y-3">
                             {data.siteDistribution.map((site) => (
-                                <div key={site.siteName} className="flex justify-between items-center text-sm">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: site.color }}></div>
-                                        <span className="text-gray-600 truncate max-w-[120px]" title={site.siteName}>{site.siteName}</span>
+                                <div
+                                    key={site.siteName}
+                                    className="flex justify-between items-center text-sm cursor-pointer hover:bg-gray-50 p-1 -mx-1 rounded transition-colors group"
+                                    onClick={() => setSelectedSite(site)}
+                                    title="Click to view employees"
+                                >
+                                    <div className="flex items-center gap-2 min-w-0">
+                                        <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: site.color }}></div>
+                                        <span className="text-gray-600 truncate max-w-[120px] group-hover:text-blue-600 underline-offset-2 group-hover:underline transition-all">
+                                            {site.siteName}
+                                        </span>
                                     </div>
-                                    <div className="flex items-center gap-4">
+                                    <div className="flex items-center gap-2 flex-shrink-0">
                                         <span className="font-semibold text-gray-800">{site.count}</span>
-                                        <span className="text-gray-400 text-xs w-8 text-right">
+                                        <span className="text-gray-400 text-xs w-8 text-right hidden sm:block">
                                             {Math.round((site.count / data.totalEmployees) * 100)}%
                                         </span>
                                     </div>
@@ -252,6 +280,56 @@ const ActivePlacementPage = () => {
                     </div>
                 ))}
             </div>
+
+            {/* DETAIL MODAL */}
+            {selectedSite && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                    <div
+                        className="bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-200"
+                        role="dialog"
+                        aria-modal="true"
+                    >
+                        {/* Modal Header */}
+                        <div className="flex justify-between items-center p-4 border-b bg-gray-50 rounded-t-xl">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
+                                    <Building2 size={24} />
+                                </div>
+                                <div>
+                                    <h2 className="text-lg font-bold text-gray-800">{selectedSite.siteName}</h2>
+                                    <p className="text-xs text-gray-500">Deployed Employees List</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setSelectedSite(null)}
+                                className="p-2 hover:bg-gray-200 rounded-full text-gray-500 transition-colors"
+                            >
+                                <X size={24} />
+                            </button>
+                        </div>
+
+                        {/* Modal Content */}
+                        <div className="flex-1 overflow-auto p-6 bg-gray-50/50">
+                            <BaseEmployeeList
+                                category="ALL"
+                                eligibleEmployeeIds={selectedSite.employeeIds}
+                                hideHeader={true}
+                                showAddButton={false}
+                            />
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="p-3 border-t bg-gray-50 rounded-b-xl flex justify-end">
+                            <button
+                                onClick={() => setSelectedSite(null)}
+                                className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

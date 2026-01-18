@@ -99,12 +99,22 @@ const DeploymentPage: React.FC = () => {
         ]);
         setSites(sitesData);
         setJobs(jobsData);
-      } catch (err) {
-        console.error(err);
+      } catch (err: any) {
+        console.error("Failed to load client details:", err);
       }
     };
     loadClientDetails();
   }, [formData.clientId]);
+
+  // --- HANDLERS ---
+  // ... (handlers omitted for brevity if unchanged, but I need to include them to match context or return the whole file. 
+  // actually I am using replace_file_content so I need to match the start/end lines of what I am replacing.
+  // I will replace from "const DeploymentPage" to the end of "loadClientDetails" useEffect to capture the state and the effect.)
+
+  // Wait, I can only replace contiguous blocks.
+  // I will make a simpler edit to just add state and update the effect.
+
+  /* SKIPPED FOR NOW, REDOING STRATEGY */
 
   // --- HANDLERS ---
 
@@ -492,10 +502,10 @@ const DeploymentPage: React.FC = () => {
           )}
 
         </div>
-      </div>
+      </div >
 
       {/* FOOTER ACTIONS */}
-      <div className="bg-white border-t p-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-20">
+      < div className="bg-white border-t p-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-20" >
         <div className="max-w-3xl mx-auto flex justify-between items-center">
           <button
             onClick={handleBack}
@@ -528,9 +538,9 @@ const DeploymentPage: React.FC = () => {
             )}
           </div>
         </div>
-      </div>
+      </div >
 
-    </div>
+    </div >
   );
 };
 
