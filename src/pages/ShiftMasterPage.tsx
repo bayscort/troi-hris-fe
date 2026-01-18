@@ -78,7 +78,7 @@ const ShiftMasterPage: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    }, [selectedClientId]); 
+    }, [selectedClientId]);
 
     // Initial Load
     useEffect(() => {
@@ -115,16 +115,16 @@ const ShiftMasterPage: React.FC = () => {
 
     const confirmDelete = async () => {
         if (!selectedShift?.id) return;
-        
+
         setDeleteLoading(true);
         try {
             // Panggil API Delete yang sebenarnya
             await shiftMasterService.deleteShiftMaster(selectedShift.id);
-            
+
             setNotification({ message: 'Shift deleted successfully', type: 'success' });
-            
+
             // Refresh data tabel
-            await fetchData(true); 
+            await fetchData(true);
         } catch (e) {
             setNotification({ message: 'Failed to delete shift', type: 'error' });
         } finally {
@@ -136,8 +136,8 @@ const ShiftMasterPage: React.FC = () => {
 
     // Helper Permission (Placeholder)
     const hasPermission = (menuName: string, permission: string): boolean => {
-        // Implementasi real permission check di sini nanti
-        return true; 
+        const menu = authState?.menus.find(m => m.name === menuName);
+        return menu ? menu.permissions.includes(permission) : false;
     };
 
     // Pagination Calculation
@@ -213,9 +213,9 @@ const ShiftMasterPage: React.FC = () => {
                 </div>
 
                 {/* Refresh Button */}
-                <button 
-                    onClick={() => fetchData(true)} 
-                    disabled={loading} 
+                <button
+                    onClick={() => fetchData(true)}
+                    disabled={loading}
                     className="text-sm px-3 py-2 border rounded-md flex items-center gap-2 hover:bg-gray-100 transition-colors disabled:opacity-50"
                 >
                     {loading ? <Loader size={16} className="animate-spin" /> : <RefreshCw size={16} />}
@@ -310,17 +310,17 @@ const ShiftMasterPage: React.FC = () => {
             <div className="flex justify-between items-center text-sm text-gray-500">
                 <span>Total {filteredShifts.length} items</span>
                 <div className="flex gap-1">
-                    <button 
-                        disabled={currentPage === 1} 
-                        onClick={() => setCurrentPage(c => c - 1)} 
+                    <button
+                        disabled={currentPage === 1}
+                        onClick={() => setCurrentPage(c => c - 1)}
                         className="px-2 py-1 border rounded hover:bg-gray-50 disabled:opacity-50"
                     >
                         Prev
                     </button>
                     <span className="px-2 py-1 bg-gray-100 rounded text-gray-700 font-medium">{currentPage}</span>
-                    <button 
-                        disabled={currentPage === totalPages || totalPages === 0} 
-                        onClick={() => setCurrentPage(c => c + 1)} 
+                    <button
+                        disabled={currentPage === totalPages || totalPages === 0}
+                        onClick={() => setCurrentPage(c => c + 1)}
                         className="px-2 py-1 border rounded hover:bg-gray-50 disabled:opacity-50"
                     >
                         Next
@@ -336,7 +336,7 @@ const ShiftMasterPage: React.FC = () => {
                 onClose={() => setIsCreateModalOpen(false)}
                 // Gunakan onSuccess untuk refresh data
                 onSuccess={() => {
-                    fetchData(true); 
+                    fetchData(true);
                     setNotification({ message: 'Shift created successfully', type: 'success' });
                 }}
             />

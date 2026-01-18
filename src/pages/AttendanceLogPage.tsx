@@ -11,7 +11,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { DateRangePicker } from "react-date-range";
-import { format } from "date-fns";
+import { format, addHours } from "date-fns";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 import { attendanceService } from "../services/api";
@@ -175,7 +175,8 @@ const AttendanceLogPage: React.FC = () => {
     if (!dateTimeStr) return "-";
     try {
       const date = new Date(dateTimeStr);
-      return format(date, "HH:mm");
+      const wibDate = addHours(date, 7);
+      return format(wibDate, "HH:mm");
     } catch {
       return "-";
     }
@@ -386,9 +387,9 @@ const AttendanceLogPage: React.FC = () => {
                       </td>
                       <td className="px-4 py-3">
                         {item.location ? (
-                          <div className="flex items-center gap-1.5 text-gray-600">
-                            <MapPin size={14} className="text-gray-400" />
-                            <span className="truncate max-w-[150px]" title={item.location}>
+                          <div className="flex items-start gap-1.5 text-gray-600">
+                            <MapPin size={14} className="text-gray-400 mt-0.5 min-w-[14px]" />
+                            <span className="break-words min-w-[200px]" title={item.location}>
                               {item.location}
                             </span>
                           </div>

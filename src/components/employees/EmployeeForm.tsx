@@ -38,7 +38,6 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [saving, setSaving] = useState(false);
-  const [loadingRefs, setLoadingRefs] = useState(false);
 
   const [jobReferenceOptions, setJobReferenceOptions] = useState<any[]>([]);
 
@@ -53,14 +52,11 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 
   useEffect(() => {
     const init = async () => {
-      setLoadingRefs(true);
       try {
         const refs = await jobReferenceService.getAll();
         setJobReferenceOptions(refs);
       } catch (e) {
         console.error('Failed to load references', e);
-      } finally {
-        setLoadingRefs(false);
       }
     };
     init();
