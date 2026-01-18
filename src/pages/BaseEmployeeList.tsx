@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, RefObject } from 'react';
 import { Employee, EmployeeCategory, EmployeeFormDto } from '../types/employee';
 import { employeeService } from '../services/api';
 import {
@@ -106,7 +106,8 @@ const exportEmployeesToExcel = (employees: Employee[]) => {
   );
 };
 
-import { useRef } from 'react';
+
+import { useClickOutside } from '../hooks/useClickOutside';
 
 interface Props {
   category: EmployeeCategory;
@@ -118,13 +119,9 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
 
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
-<<<<<<< HEAD
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
-=======
-  const [page] = useState(0);
->>>>>>> 4eaed7350dabd827866a8ad7ba775e0407679539
 
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -137,6 +134,10 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
   const sortRef = useRef<HTMLDivElement>(null);
 
   const [search, setSearch] = useState('');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  useClickOutside(filterRef as RefObject<HTMLElement>, () => setFilterOpen(false));
+  useClickOutside(sortRef as RefObject<HTMLElement>, () => setSortOpen(false));
 
   type FilterOperator = 'eq' | 'gte' | 'lte' | 'contains';
   // type LogicalOperator = 'AND' | 'OR'; // Removed
@@ -403,11 +404,70 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
     setPage(0);
   }, [search, filters, sort]);
 
-  // Initial fetch only on category change
   useEffect(() => {
     fetchData();
     setPage(0);
   }, [category]);
+
+  // Reset selection when page or filters change (security: only delete visible)
+  useEffect(() => {
+    setSelectedIds(new Set());
+  }, [page, search, filters, category]);
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      // Only select items with valid IDs
+      const allIds = employees
+        .map(emp => emp.id)
+        .filter((id): id is string => !!id);
+      setSelectedIds(new Set(allIds));
+    } else {
+      setSelectedIds(new Set());
+    }
+  };
+
+  const handleSelectOne = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+
+    if (
+      !window.confirm(
+        `Are you sure you want to delete ${selectedIds.size} employees? This cannot be undone.`
+      )
+    ) {
+      return;
+    }
+
+    setLoading(true);
+    let successCount = 0;
+
+    // Convert to array for iteration
+    const idsToDelete = Array.from(selectedIds);
+
+    for (const id of idsToDelete) {
+      try {
+        await employeeService.delete(id);
+        successCount++;
+      } catch (error) {
+        console.error(`Failed to delete employee ${id}`, error);
+      }
+    }
+
+    alert(`Successfully deleted ${successCount} employees.`);
+    setSelectedIds(new Set());
+    fetchData(); // Refresh list
+  };
 
   const handleDelete = async (id: string) => {
     if (
@@ -561,6 +621,12 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
           <p className="text-sm text-gray-500 mt-1">
             Manage your {category.toLowerCase()} staff members.
           </p>
+
+          {selectedIds.size > 0 && (
+            <div className="mt-2 text-sm text-[#ff6908] bg-orange-50 inline-block px-3 py-1 rounded-md border border-orange-100 animate-[fadeIn_0.2s_ease-out]">
+              <span className="font-medium">{selectedIds.size}</span> selected
+            </div>
+          )}
         </div>
 
         {/* TOOLBAR */}
@@ -579,9 +645,19 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
                 placeholder="Search..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-md w-40 focus:ring-2 focus:ring-orange-200"
+                className="pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-md w-40 focus:ring-2 focus:ring-orange-200 transition-all"
               />
             </div>
+
+            {selectedIds.size > 0 && (
+              <button
+                onClick={handleBulkDelete}
+                className="flex items-center gap-1.5 px-3 py-2 bg-red-50 text-red-600 border border-red-200 rounded-md text-sm hover:bg-red-100 transition-colors animate-[fadeIn_0.2s_ease-out]"
+              >
+                <Trash size={16} />
+                Delete ({selectedIds.size})
+              </button>
+            )}
 
             <div ref={filterRef} className="relative">
               {/* BUTTON */}
@@ -595,8 +671,8 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
 
               {/* DROPDOWN */}
               {filterOpen && (
-                <div className="absolute left-0 mt-2 z-20">
-                  <div className="bg-white border rounded-lg shadow-lg p-3 min-w-[320px]">
+                <div className="absolute left-0 mt-2 z-20 animate-[fadeIn_0.2s_ease-out]">
+                  <div className="bg-white border border-gray-100 rounded-lg shadow-xl p-3 min-w-[320px]">
 
                     {/* MULTI FILTER ROWS (AND / OR) */}
                     <div className="space-y-2 border-t pt-4">
@@ -743,8 +819,8 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
 
               {/* DROPDOWN */}
               {sortOpen && (
-                <div className="absolute left-0 mt-2 z-20">
-                  <div className="bg-white border rounded-lg shadow-lg p-2 min-w-[180px] space-y-1">
+                <div className="absolute left-0 mt-2 z-20 animate-[fadeIn_0.2s_ease-out]">
+                  <div className="bg-white border border-gray-100 rounded-lg shadow-xl p-2 min-w-[180px] space-y-1">
                     <button
                       onClick={() => {
                         setSort({ key: 'fullName', direction: 'asc' });
@@ -858,6 +934,17 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
+                <th className="px-6 py-4 text-left">
+                  <input
+                    type="checkbox"
+                    className="rounded border-gray-300 text-[#ff6908] focus:ring-orange-200"
+                    onChange={handleSelectAll}
+                    checked={
+                      employees.length > 0 &&
+                      employees.every(e => e.id && selectedIds.has(e.id))
+                    }
+                  />
+                </th>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">
                   Name
                 </th>
@@ -882,7 +969,7 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
             <tbody className="bg-white divide-y divide-gray-200">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-12">
+                  <td colSpan={7} className="text-center py-12">
                     <Loader
                       className="animate-spin mx-auto text-[#ff6908]"
                       size={24}
@@ -906,8 +993,17 @@ export default function BaseEmployeeList({ category, showAddButton }: Props) {
                   return (
                     <tr
                       key={emp.id}
-                      className="hover:bg-orange-50/30 transition"
+                      className={`transition ${selectedIds.has(emp.id!) ? 'bg-orange-50/60' : 'hover:bg-orange-50/30'}`}
                     >
+                      {/* CHECKBOX */}
+                      <td className="px-6 py-4">
+                        <input
+                          type="checkbox"
+                          className="rounded border-gray-300 text-[#ff6908] focus:ring-orange-200"
+                          checked={!!emp.id && selectedIds.has(emp.id)}
+                          onChange={() => emp.id && handleSelectOne(emp.id)}
+                        />
+                      </td>
                       {/* NAME */}
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
